@@ -108,17 +108,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:radial-gradient(circl
 
 <!-- TODAY -->
 <section id="section-today" class="tab-content">
-  <!-- MODE SWITCH: Entrée / Sortie -->
-  <div class="glass rounded-3xl p-5 mb-6 flex flex-wrap items-center justify-between gap-4">
-    <div class="max-w-xl">
-      <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-right-left text-emerald-400"></i>Mode de la pointeuse</h3>
-      <p id="modeInfo" class="text-xs text-slate-400 mt-1"></p>
-    </div>
-    <div class="grid grid-cols-2 gap-3 w-full sm:w-auto sm:min-w-[380px]">
-      <button id="modeInBtn" onclick="setMode('in')"><i class="fa-solid fa-right-to-bracket mr-2"></i>ENTRÉE</button>
-      <button id="modeOutBtn" onclick="setMode('out')"><i class="fa-solid fa-right-from-bracket mr-2"></i>SORTIE</button>
-    </div>
-  </div>
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
     <div class="lg:col-span-8 glass rounded-3xl p-6">
       <div class="flex items-center justify-between mb-4">
@@ -208,7 +197,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:radial-gradient(circl
       </div>
       <table class="rp-table"><thead id="reportHead"></thead><tbody id="reportBody"></tbody></table>
       <div class="rp-foot">
-        <div>Entrée = 1er passage en mode Entrée · Sortie (→) = dernier passage en mode Sortie ·Retard = après l'heure standard (08:30) · Absent = aucun passage · - = jour pas encore passé · * = modifié manuellement</div>
+        <div>Entrée = 1er passage · Sortie (→) = dernier passage · Retard = après l'heure standard (08:30) · Absent = aucun passage · - = jour pas encore passé · * = modifié manuellement</div>
         <div class="rp-sign">Visa de la direction</div>
       </div>
     </div>
@@ -268,7 +257,7 @@ const DAY_NAMES = ['Samedi','Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendr
 const STD = '08:30';
 
 /* ===================== STATE ===================== */
-let workers = [], punches = [], overrides = [], syncStatus = null, modeLog = [];
+let workers = [], punches = [], overrides = [], syncStatus = null;
 let pIdx = {}, oIdx = {};                  // indexes: workerId_date -> data
 let weekOffset = 0, currentWeekStart = '';
 let weeklyChart = null, donutChart = null;
@@ -315,8 +304,6 @@ if (DEMO) {
   const t = new Date();
   punches = punches.filter(p => !(localDate(new Date(p.punched_at)) === todayS && (p.worker_id === 'w5' || p.worker_id === 'w4')));
   syncStatus = { last_run_at: new Date().toISOString(), last_ok_at: new Date().toISOString(), last_message: 'OK - démo', device_ip: '192.168.1.245' };
-  { const t0 = new Date(); t0.setHours(7, 0, 0, 0); modeLog = [{ mode: 'in', started_at: t0.toISOString() }]; }
-  api.setMode = async m => { modeLog.push({ mode: m, started_at: new Date().toISOString() }); };
   api.load = async () => {};
   api.loadStatus = async () => { syncStatus = Object.assign({}, syncStatus, { last_run_at: new Date().toISOString() }); };
   api.saveOverride = async o => { overrides = overrides.filter(x => !(x.worker_id === o.worker_id && x.work_date === o.work_date)); overrides.push(o); };
@@ -339,14 +326,13 @@ if (DEMO) {
   api.load = async () => {
     const since = new Date(Date.now() - 180 * 864e5);
     const sinceD = localDate(since);
-    const [w, p, o, s, ml] = await Promise.all([
+    const [w, p, o, s] = await Promise.all([
       fetchAll('workers', q => q.select('*').order('id')),
       fetchAll('attendance_punches', q => q.select('worker_id,punched_at,id').gte('punched_at', since.toISOString()).order('id')),
       fetchAll('attendance_days', q => q.select('*').gte('work_date', sinceD).order('id')),
-      sb.from('device_sync_status').select('*').eq('id', 1).maybeSingle(),
-      fetchAll('punch_mode_log', q => q.select('*').order('id'))
+      sb.from('device_sync_status').select('*').eq('id', 1).maybeSingle()
     ]);
-    workers = w; punches = p; overrides = o; syncStatus = s.data || null; modeLog = ml;
+    workers = w; punches = p; overrides = o; syncStatus = s.data || null;
   };
   api.saveOverride = async o => { const { error } = await sb.from('attendance_days').upsert(Object.assign({ updated_at: new Date().toISOString() }, o), { onConflict: 'worker_id,work_date' }); if (error) throw error; };
   api.deleteOverride = async (wid, ds) => { const { error } = await sb.from('attendance_days').delete().eq('worker_id', wid).eq('work_date', ds); if (error) throw error; };
@@ -355,7 +341,6 @@ if (DEMO) {
     if (error) throw error;
   };
   api.deactivate = async id => { const { error } = await sb.from('workers').update({ active: false }).eq('id', id); if (error) throw error; };
-  api.setMode = async m => { const { error } = await sb.from('punch_mode_log').insert({ mode: m }); if (error) throw error; };
   api.loadStatus = async () => { const { data, error } = await sb.from('device_sync_status').select('*').eq('id', 1).maybeSingle(); if (!error && data) syncStatus = data; };
 }
 
@@ -381,14 +366,7 @@ function dayInfo(w, ds) {
   }
   const arr = pIdx[k];
   if (!arr || !arr.length) return null;
-  // each punch is classified by the mode that was active when it happened
-  const ins = [], outs = [], autos = [];
-  arr.forEach(d => { const m = modeAt(d); (m === 'in' ? ins : m === 'out' ? outs : autos).push(d); });
-  if (ins.length || outs.length) {
-    const t0 = ins.length ? hhmm(ins[0]) : '';                 // entry = earliest punch made in ENTRÉE mode
-    return { in: t0, out: outs.length ? hhmm(outs[outs.length - 1]) : '', manual: false, late: !!t0 && t0 > std, count: arr.length };
-  }
-  // old punches (before any mode was chosen): first = in, last = out
+  // automatic rule: 1st punch of the day = check-in, last punch (at least 5 min later) = check-out
   const a = arr[0], b = arr[arr.length - 1], t = hhmm(a);
   return { in: t, out: (b - a) >= 5 * 60000 ? hhmm(b) : '', manual: false, late: t > std, count: arr.length };
 }
@@ -401,39 +379,8 @@ function weekDates() {
 }
 
 /* ===================== RENDER ===================== */
-function renderAll() { renderSync(); renderMode(); renderToday(); renderWorkers(); renderReport(); renderDashboard(); }
+function renderAll() { renderSync(); renderToday(); renderWorkers(); renderReport(); renderDashboard(); }
 
-/* ---------- Entrée / Sortie mode ---------- */
-function currentMode() { return modeLog.length ? modeLog[modeLog.length - 1].mode : null; }
-function modeAt(d) {                       // mode that was active at a given moment ('auto' = before any mode was chosen)
-  let m = 'auto';
-  for (const r of modeLog) { if (new Date(r.started_at) <= d) m = r.mode; else break; }
-  return m;
-}
-function modeBadge(d) {
-  const m = modeAt(d);
-  if (m === 'in') return '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">Entrée</span>';
-  if (m === 'out') return '<span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-orange-500/15 text-orange-300 border border-orange-500/25">Sortie</span>';
-  return '';
-}
-function renderMode() {
-  const cur = currentMode();
-  const base = 'py-4 rounded-2xl text-sm font-extrabold tracking-wide transition-all ';
-  const on = 'text-white shadow-lg ', off = 'bg-slate-900 text-slate-400 border border-slate-700 hover:text-white';
-  document.getElementById('modeInBtn').className = base + (cur === 'in' ? on + 'bg-emerald-600' : off);
-  document.getElementById('modeOutBtn').className = base + (cur === 'out' ? on + 'bg-orange-500' : off);
-  const el = document.getElementById('modeInfo');
-  if (!cur) { el.textContent = "Aucun mode choisi : règle par défaut (1er passage = entrée, dernier = sortie). Choisissez ENTRÉE le matin et SORTIE le soir."; return; }
-  const since = new Date(modeLog[modeLog.length - 1].started_at);
-  const isIn = cur === 'in';
-  el.innerHTML = `Mode actif : <b class="${isIn ? 'text-emerald-300' : 'text-orange-300'}">${isIn ? 'ENTRÉE' : 'SORTIE'}</b> depuis ${hhmm(since)} (${since.toLocaleDateString('fr-FR')}). Chaque passage est compté comme ${isIn ? 'une entrée' : 'une sortie'}, même si le vendeur passe plusieurs fois.`;
-}
-async function setMode(m) {
-  if (currentMode() === m) return;
-  const isIn = m === 'in';
-  if (!confirm(`Activer le mode ${isIn ? 'ENTRÉE' : 'SORTIE'} ?\n\nTous les prochains passages sur la pointeuse seront comptés comme des ${isIn ? 'entrées' : 'sorties'}.`)) return;
-  await guard(async () => { await api.setMode(m); await refresh(); });
-}
 
 function renderSync() {
   const el = document.getElementById('syncBadge');
@@ -471,7 +418,7 @@ function renderToday() {
   const list = punches.filter(p => localDate(new Date(p.punched_at)) === today).sort((a, b) => new Date(b.punched_at) - new Date(a.punched_at)).slice(0, 12);
   document.getElementById('recentPunches').innerHTML = list.map(p => {
     const w = wmap[p.worker_id] || { full_name: '?' };
-    return `<div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/60 border border-slate-800"><div class="flex items-center space-x-2.5">${avatar(w, 'w-7 h-7')}<span class="text-xs font-semibold text-slate-200">${esc(w.full_name)}</span></div><span class="flex items-center gap-2">${modeBadge(new Date(p.punched_at))}<span class="text-xs font-mono text-emerald-300">${hhmm(new Date(p.punched_at))}</span></span></div>`;
+    return `<div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/60 border border-slate-800"><div class="flex items-center space-x-2.5">${avatar(w, 'w-7 h-7')}<span class="text-xs font-semibold text-slate-200">${esc(w.full_name)}</span></div><span class="flex items-center gap-2"><span class="text-xs font-mono text-emerald-300">${hhmm(new Date(p.punched_at))}</span></span></div>`;
   }).join('') || '<p class="text-xs text-slate-500">Aucun passage aujourd\'hui.</p>';
 }
 
@@ -711,7 +658,7 @@ async function start() {
   let day = localDate(new Date());
   setInterval(() => { const d = localDate(new Date()); if (d !== day) { day = d; recompute(); } }, 30000);
   if (!DEMO) {
-    ['attendance_punches', 'attendance_days', 'workers', 'punch_mode_log'].forEach(t =>
+    ['attendance_punches', 'attendance_days', 'workers'].forEach(t =>
       sb.channel('rt-' + t).on('postgres_changes', { event: '*', schema: 'public', table: t }, debounced).subscribe());
   }
 }
