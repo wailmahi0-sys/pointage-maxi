@@ -1,248 +1,118 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Maxi Bazar - Pointage</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1325">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Maxi Staff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Maxi Bazar - Personnel</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-body{font-family:'Plus Jakarta Sans',sans-serif;background:radial-gradient(circle at top left,#141c2e,#0b1325 55%,#050914);min-height:100vh;color:#e2e8f0}
-.glass{background:rgba(21,32,54,.72);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.08);box-shadow:0 16px 40px rgba(0,0,0,.35)}
-.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{scrollbar-width:none}
-.inp{width:100%;background:#020617;color:#e2e8f0;padding:.65rem;border-radius:.75rem;border:1px solid #1e293b;font-size:.8rem}
-.inp:focus{outline:none;border-color:#10b981}
-/* ===== weekly sheet (screen + PDF + print) ===== */
-.rp{background:#fff;color:#0f172a;font-size:14px;line-height:1.35;padding:2em 2.2em;box-sizing:border-box;width:100%;min-width:900px;border-radius:1em;box-shadow:0 10px 40px rgba(0,0,0,.45);-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.rp *{box-sizing:border-box}
-.rp-head{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:.8em;border-bottom:.22em solid #059669}
-.rp-brand{font-size:1.9em;font-weight:800;letter-spacing:.05em;line-height:1.1}
-.rp-sub{font-size:.8em;color:#64748b}.rp-week{text-align:right}.rp-week b{font-size:1.15em;color:#065f46}
-.rp-stats{display:flex;gap:.8em;margin:1em 0 1.1em}
-.rp-stat{flex:1;border:1px solid #e2e8f0;background:#f8fafc;border-radius:.6em;padding:.5em .9em;display:flex;justify-content:space-between;align-items:center}
-.rp-stat span{font-size:.72em;color:#64748b;text-transform:uppercase;font-weight:700;letter-spacing:.05em}.rp-stat b{font-size:1.5em}
-.rp-table{width:100%;border-collapse:collapse}
-.rp-table th{background:#0f172a;color:#fff;padding:.5em .4em;font-size:.8em;font-weight:700;text-align:center}
-.rp-table th small{display:block;font-weight:400;opacity:.7;font-size:.85em}
-.rp-table th.rp-th-name{text-align:left;padding-left:.8em;border-radius:.5em 0 0 0}.rp-table th:last-child{border-radius:0 .5em 0 0}
-.rp-table td{padding:.42em .4em;border-bottom:1px solid #e2e8f0;text-align:center;vertical-align:middle}
-.rp-table tbody tr:nth-child(even){background:#f8fafc}
-.rp-cell{cursor:pointer}.rp-cell:hover{background:#ecfdf5}
-.rp-name{text-align:left!important;font-weight:700;padding-left:.8em!important}
-.rp-dept{display:block;font-size:.78em;color:#64748b;font-weight:400}
-.rp-ok{color:#047857;font-weight:700;font-family:ui-monospace,Menlo,monospace}
-.rp-late{color:#b45309;font-weight:700;font-family:ui-monospace,Menlo,monospace}
-.rp-abs{color:#b91c1c;font-weight:700;font-size:.9em}.rp-pend{color:#cbd5e1}
-.rp-exit{display:block;font-size:.78em;color:#64748b;font-family:ui-monospace,Menlo,monospace;font-weight:400}
-.rp-tot{font-weight:800;font-size:1.05em}
-.rp-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:2em;margin-top:1.1em;font-size:.75em;color:#64748b}
-.rp-sign{border-top:1px solid #94a3b8;min-width:14em;text-align:center;padding-top:.3em;color:#475569}
-.rp-page{position:fixed;left:-20000px;top:0;width:1120px;height:778px;min-width:0;overflow:hidden;display:flex;flex-direction:column;border-radius:0;box-shadow:none}
-.rp-page>*{flex-shrink:0}.rp-page .rp-foot{margin-top:auto;padding-top:1em}
-.rp-page.rp-visible{left:0;z-index:99999}.rp-page .rp-cell{cursor:default}
-.rp-compact .rp-head{padding-bottom:.5em}.rp-compact .rp-stats{margin:.6em 0 .7em}.rp-compact .rp-stat{padding:.3em .8em}
-.rp-compact .rp-table td{padding:.2em .3em}.rp-compact .rp-table th{padding:.35em .3em}
-.rp-compact .rp-table th small{display:inline;margin-left:.4em}.rp-compact .rp-dept{display:inline;margin-left:.6em}
-.rp-compact .rp-exit{display:inline;margin-left:.4em}.rp-compact .rp-foot{margin-top:.6em}
-@page{size:A4 landscape;margin:0}
-@media print{
- body{background:#fff!important;color:#000!important}
- .no-print{display:none!important}
- html,body{margin:0!important;padding:0!important;min-height:0!important;height:auto!important;display:block!important}
- body.printing-sheet>*:not(#printSheet){display:none!important}
- #printSheet{position:static!important;left:auto!important;margin:0!important}
-}
+:root{--bg:#0b1325;--card:#131d33;--card2:#0f172a;--line:rgba(255,255,255,.08);--txt:#e2e8f0;--mut:#94a3b8;--dim:#64748b;--em:#34d399;--amber:#fbbf24;--rose:#fb7185;--ind:#818cf8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
+body{min-height:100vh;background:radial-gradient(circle at top left,#141c2e,#0b1325 55%,#050914) fixed}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;padding:0}
+.wrap{max-width:560px;margin:0 auto;padding:0 14px calc(30px + env(safe-area-inset-bottom))}
+.top{position:sticky;top:0;z-index:10;margin:0 -14px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:rgba(11,19,37,.9);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#10b981,#6366f1);display:flex;align-items:center;justify-content:center;font-weight:800;color:#050914;font-size:17px;flex:none}
+.ttl{flex:1;min-width:0}.ttl b{display:block;font-size:16px;letter-spacing:.04em}.ttl small{display:block;color:var(--mut);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none}
+.ib svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ib:active{background:rgba(255,255,255,.14)}.spin svg{animation:sp .8s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.pill{padding:8px 12px;border-radius:12px;background:linear-gradient(90deg,#059669,#0d9488);font-size:12px;font-weight:700;color:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:12px}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.kpi{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.kpi small{display:block;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.kpi b{font-size:21px;line-height:1.15}.kpi.hl{background:linear-gradient(135deg,rgba(16,185,129,.16),rgba(99,102,241,.12));border-color:rgba(52,211,153,.25)}
+.wbar{display:flex;align-items:center;gap:8px;margin-top:14px}
+.wbar .lbl{flex:1;text-align:center;font-size:14px;font-weight:700}.wbar .lbl small{display:block;color:var(--mut);font-weight:500;font-size:11px;margin-top:1px}
+.wbar .now{font-size:11px;font-weight:700;color:var(--em);padding:0 4px}
+.srow{display:flex;gap:8px;margin-top:12px}.srow .search{margin-top:0;flex:1;min-width:0;width:auto}
+.addb{padding:0 14px;border-radius:14px;background:linear-gradient(90deg,#059669,#0d9488);color:#fff;font-weight:700;font-size:14px;white-space:nowrap}
+.acts{display:flex;gap:10px;margin-top:12px}.btn{flex:1;padding:13px;border-radius:14px;font-weight:700;font-size:14px;border:1px solid var(--line);background:rgba(255,255,255,.05)}
+.btn.em{background:linear-gradient(90deg,#059669,#0d9488);color:#fff;border:0}.btn.rs{background:rgba(251,113,133,.12);color:#fecdd3;border-color:rgba(251,113,133,.35)}
+.sheet{position:fixed;inset:0;z-index:50;background:rgba(2,6,23,.82);display:none;align-items:flex-end;justify-content:center}.sheet.on{display:flex}
+.box{width:100%;max-width:560px;max-height:93vh;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-radius:24px 24px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+@media(min-width:600px){.sheet{align-items:center}.box{border-radius:24px}}
+.box h3{margin:0 0 4px;font-size:18px}.f label{display:block;color:var(--mut);font-size:12px;margin:12px 0 4px}
+.f input,.f select{width:100%;padding:12px;border-radius:12px;background:#020617;border:1px solid #1e293b;color:var(--txt);font-size:16px;outline:none;font-family:inherit}.f input:focus,.f select:focus{border-color:#10b981}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ph{display:flex;align-items:center;gap:12px;margin-top:10px}
+.ph .pv{width:64px;height:64px;border-radius:18px;overflow:hidden;background:#1e293b;border:1px solid #334155;display:flex;align-items:center;justify-content:center;color:var(--dim);flex:none}.ph .pv img{width:100%;height:100%;object-fit:cover}
+.ph .pb{display:flex;gap:8px}.ph .pb label,.ph .pb button{margin:0;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.08);color:var(--txt);font-size:13px;cursor:pointer}
+.ph input[type=file]{display:none}.note{font-size:11px;color:var(--dim);margin:8px 0 0}
+.search{width:100%;margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--card2);border:1px solid var(--line);color:var(--txt);font-size:15px;outline:none}
+.doc{padding:12px 0;border-bottom:1px solid var(--line)}.doc:last-child{border-bottom:0;padding-bottom:2px}
+.doc .dtop{display:flex;align-items:center;gap:12px}
+.doc .di{width:40px;height:40px;border-radius:12px;background:rgba(129,140,248,.14);border:1px solid rgba(129,140,248,.3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--ind);flex:none}
+.doc .di.none{background:rgba(255,255,255,.04);border-color:var(--line);color:var(--dim)}
+.doc .dt{flex:1;min-width:0}.doc .dt b{display:block;font-size:14px}.doc .dt small{display:block;font-size:12px;margin-top:2px;color:var(--mut)}
+.doc .da{display:flex;gap:8px;margin-top:10px}
+.sm{flex:1;text-align:center;padding:10px 8px;border-radius:12px;font-size:13px;font-weight:700;background:rgba(255,255,255,.07);border:1px solid var(--line);cursor:pointer;color:var(--txt)}
+.sm:active{background:rgba(255,255,255,.14)}.sm.em{background:linear-gradient(90deg,#059669,#0d9488);color:#fff;border:0}
+.sm.rs{flex:none;padding:10px 14px;background:rgba(251,113,133,.12);color:#fecdd3;border-color:rgba(251,113,133,.35)}
+.sm.off{opacity:.55;pointer-events:none}.sm input[type=file]{display:none}
+.search:focus{border-color:#10b981}
+.wc{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin-top:10px}
+.wc:active{background:#1a2742}.wc .nm{flex:1;min-width:0}.wc .nm b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wc .nm small{display:block;color:var(--mut);font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wc .rt{text-align:right;flex:none}.wc .rt b{display:block;font-size:15px}.wc .rt small{display:block;font-size:12px;margin-top:2px}
+.av{width:48px;height:48px;border-radius:14px;object-fit:cover;background:linear-gradient(135deg,rgba(5,150,105,.4),rgba(79,70,229,.4));border:1px solid #334155;display:flex;align-items:center;justify-content:center;font-weight:700;color:#a7f3d0;font-size:15px;flex:none}
+.av.big{width:84px;height:84px;border-radius:22px;font-size:26px}
+.hd{display:flex;align-items:center;gap:14px;margin-top:14px}.hd h1{margin:0;font-size:20px;line-height:1.2}.hd p{margin:3px 0 0;color:var(--mut);font-size:13px}
+.id{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;color:#c7d2fe;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);font-family:ui-monospace,Menlo,monospace}
+.row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}.row:last-child{border:0}
+.row span:first-child{color:var(--mut)}.row span:last-child{font-weight:600;text-align:right}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);margin:0 0 4px;font-weight:700}
+.day{display:grid;grid-template-columns:84px 1fr auto;gap:8px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}.day:last-child{border:0}
+.dn b{display:block;font-size:14px}.dn span{font-size:11px;color:var(--mut)}
+.dm{font-size:14px;font-variant-numeric:tabular-nums}.dm small{display:block;font-size:11px;margin-top:2px}
+.dh{font-size:16px;font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+.ok{color:var(--em)}.warn{color:var(--amber)}.bad{color:var(--rose)}.mut{color:var(--mut)}.dim{color:var(--dim)}
+.tot{display:flex;justify-content:space-between;align-items:center;padding-top:12px;margin-top:2px;border-top:2px solid rgba(52,211,153,.35);font-weight:800}
+.err{margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.3);color:#fecdd3;font-size:13px}
+.empty{text-align:center;color:var(--mut);padding:30px 10px;font-size:14px}
+.foot{text-align:center;color:var(--dim);font-size:11px;margin-top:20px}.foot button{color:var(--mut);text-decoration:underline;margin-top:8px;font-size:12px}
+.back{display:inline-flex;align-items:center;gap:4px;margin-top:12px;color:var(--mut);font-size:14px;padding:6px 8px 6px 0}.back svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login form{width:100%;max-width:360px;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:24px}
+.login .logo{width:52px;height:52px;border-radius:16px;font-size:24px;margin:0 auto 14px}.login h1{text-align:center;font-size:18px;margin:0 0 4px}.login p.s{text-align:center;color:var(--mut);font-size:12px;margin:0 0 18px}
+.login input{width:100%;padding:13px;border-radius:12px;background:#020617;border:1px solid #1e293b;color:var(--txt);font-size:16px;margin-bottom:10px;outline:none}
+.login input:focus{border-color:#10b981}.login .go{width:100%;padding:13px;border-radius:12px;background:linear-gradient(90deg,#059669,#0d9488);color:#fff;font-weight:700;font-size:15px;margin-top:4px}
+.login .le{color:var(--rose);font-size:12px;min-height:16px;margin-top:8px;text-align:center}
+.skel{height:64px;border-radius:18px;margin-top:10px;background:linear-gradient(90deg,#131d33,#1a2742,#131d33);background-size:200% 100%;animation:sh 1.2s infinite}@keyframes sh{to{background-position:-200% 0}}
 </style>
 </head>
-<body class="flex flex-col min-h-screen antialiased">
-
-<!-- LOGIN -->
-<div id="loginOverlay" class="hidden fixed inset-0 z-[100] bg-slate-950 flex items-center justify-center p-4">
-  <form id="loginForm" class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-2xl">
-    <div class="text-center space-y-1">
-      <div class="mx-auto h-12 w-12 rounded-2xl bg-emerald-500/15 flex items-center justify-center mb-2"><i class="fa-solid fa-lock text-emerald-400"></i></div>
-      <h2 class="text-lg font-bold text-white">MAXI BAZAR</h2><p class="text-xs text-slate-400">Connexion requise</p>
-    </div>
-    <input id="loginEmail" type="email" required placeholder="Email" class="inp">
-    <input id="loginPassword" type="password" required placeholder="Mot de passe" class="inp">
-    <p id="loginError" class="text-xs text-rose-400 min-h-[1rem]"></p>
-    <button class="w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 text-white">Se connecter</button>
-  </form>
-</div>
-<button id="logoutBtn" onclick="logout()" class="no-print hidden fixed bottom-3 right-3 z-50 px-3 py-1.5 rounded-xl text-[11px] font-semibold bg-slate-900/90 text-slate-400 border border-slate-800 hover:text-white"><i class="fa-solid fa-right-from-bracket mr-1"></i>Déconnexion</button>
-
-<!-- HEADER -->
-<header class="no-print sticky top-0 z-50 glass border-b border-slate-800/80 px-4 lg:px-8 py-3.5 flex items-center justify-between gap-4">
-  <div class="flex items-center gap-4">
-    <div class="h-11 w-11 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-indigo-500 p-0.5">
-      <div class="h-full w-full bg-slate-950 rounded-[14px] flex items-center justify-center"><i class="fa-solid fa-store text-emerald-400 text-lg"></i></div>
-    </div>
-    <div>
-      <div class="flex items-center gap-2">
-        <h1 class="text-xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-200 via-slate-100 to-indigo-200">MAXI BAZAR</h1>
-        <span id="demoPill" class="hidden px-2.5 py-0.5 text-[10px] font-bold uppercase bg-amber-500/15 text-amber-300 rounded-full border border-amber-500/25">Mode démo</span>
-      </div>
-      <p class="text-xs text-slate-400">Pointage du personnel</p>
-    </div>
-  </div>
-  <div class="flex items-center gap-4">
-    <div id="syncBadge" class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold border"></div>
-    <div class="hidden md:block text-right">
-      <div id="liveClock" class="text-lg font-bold font-mono tracking-wider text-emerald-300">00:00:00</div>
-      <div id="liveDate" class="text-xs text-slate-400">--</div>
-    </div>
-  </div>
-</header>
-
-<!-- TABS -->
-<nav class="no-print glass mx-4 lg:mx-8 mt-4 rounded-2xl p-1.5 flex gap-1 overflow-x-auto no-scrollbar">
-  <button onclick="switchTab('today')" id="tab-today" class="tab-btn"><i class="fa-solid fa-door-open"></i><span>Aujourd'hui</span></button>
-  <button onclick="switchTab('workers')" id="tab-workers" class="tab-btn"><i class="fa-solid fa-users"></i><span>Employés</span></button>
-  <button onclick="switchTab('reports')" id="tab-reports" class="tab-btn"><i class="fa-solid fa-file-pdf"></i><span>Rapport de la semaine</span></button>
-</nav>
-
-<main class="flex-grow p-4 lg:p-8 max-w-7xl mx-auto w-full">
-
-<!-- TODAY -->
-<section id="section-today" class="tab-content">
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-    <div class="lg:col-span-8 glass rounded-3xl p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2"><i class="fa-solid fa-fingerprint text-emerald-400"></i>Équipe en direct</h3>
-        <span id="todayCountBadge" class="text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/25 px-2.5 py-0.5 rounded-full">0 présent</span>
-      </div>
-      <div id="workerCards" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"></div>
-    </div>
-    <div class="lg:col-span-4 space-y-6">
-      <div class="glass rounded-3xl p-6 border border-emerald-500/20">
-        <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2"><i class="fa-solid fa-satellite-dish text-emerald-400"></i>Pointeuse</h3>
-        <div class="text-xs space-y-2 text-slate-300">
-          <div class="flex justify-between"><span class="text-slate-400">Appareil</span><span class="font-mono">192.168.1.245</span></div>
-          <div class="flex justify-between"><span class="text-slate-400">Dernier contact</span><span id="syncLast" class="font-mono">--</span></div>
-          <div class="flex justify-between gap-3"><span class="text-slate-400">État</span><span id="syncMsg" class="text-right truncate">--</span></div>
-        </div>
-      </div>
-      <div class="glass rounded-3xl p-6">
-        <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2"><i class="fa-solid fa-list-check text-emerald-400"></i>Derniers passages</h3>
-        <div id="recentPunches" class="space-y-2 max-h-[340px] overflow-y-auto no-scrollbar"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- EMPLOYEES -->
-<section id="section-workers" class="tab-content hidden">
-  <div class="glass rounded-3xl p-6">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
-      <div><h3 class="text-lg font-bold text-white">Employés</h3>
-        <p class="text-xs text-slate-400">Les employés enregistrés sur la pointeuse apparaissent ici automatiquement. L'<b>ID pointeuse</b> est le numéro enregistré sur la machine.</p></div>
-      <button onclick="openWorker()" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white whitespace-nowrap"><i class="fa-solid fa-plus mr-1.5"></i>Ajouter un employé</button>
-    </div>
-    <div class="overflow-x-auto no-scrollbar">
-      <table class="w-full text-left text-xs">
-        <thead><tr class="text-slate-400 border-b border-slate-800 uppercase text-[10px] tracking-wider">
-          <th class="pb-3 pl-2">Employé</th><th class="pb-3">Rayon</th><th class="pb-3">ID pointeuse</th><th class="pb-3">Heure d'arrivée</th><th class="pb-3">Aujourd'hui</th><th class="pb-3 text-right pr-2">Actions</th>
-        </tr></thead>
-        <tbody id="workerTable" class="divide-y divide-slate-800/60 text-slate-300"></tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-<!-- WEEKLY REPORT -->
-<section id="section-reports" class="tab-content hidden space-y-6">
-  <div class="no-print glass rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
-    <div><h3 class="text-sm font-bold text-white">Rapport hebdomadaire</h3>
-      <p class="text-xs text-slate-400"><span class="text-emerald-400">Cliquez sur une case pour corriger l'heure d'entrée / de sortie ou marquer présent / absent.</span></p></div>
-    <div class="flex flex-wrap items-center gap-3">
-      <div class="flex gap-1">
-        <button onclick="changeWeek(-1)" class="px-3 py-2.5 rounded-xl text-xs bg-slate-800 hover:bg-slate-700" title="Semaine précédente"><i class="fa-solid fa-chevron-left"></i></button>
-        <button onclick="changeWeek(0)" class="px-3 py-2.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700">Cette semaine</button>
-        <button onclick="changeWeek(1)" class="px-3 py-2.5 rounded-xl text-xs bg-slate-800 hover:bg-slate-700" title="Semaine suivante"><i class="fa-solid fa-chevron-right"></i></button>
-      </div>
-      <button onclick="exportPDF()" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white"><i class="fa-solid fa-file-pdf mr-1.5"></i>Télécharger PDF</button>
-      <button onclick="printReport()" class="px-4 py-2.5 rounded-xl text-xs font-semibold bg-amber-600 hover:bg-amber-500 text-white"><i class="fa-solid fa-print mr-1.5"></i>Imprimer</button>
-    </div>
-  </div>
-  <div class="overflow-x-auto no-scrollbar pb-2">
-    <div id="pdfReportContainer" class="rp">
-      <div class="rp-head">
-        <div><div class="rp-brand">MAXI BAZAR</div><div class="rp-sub">Rapport hebdomadaire de présence du personnel</div></div>
-        <div class="rp-week"><b id="reportDateText">--</b><div class="rp-sub">Édité le <span id="reportEditDate">--</span></div></div>
-      </div>
-      <div class="rp-stats">
-        <div class="rp-stat"><span>Employés</span><b id="repStaff">0</b></div>
-        <div class="rp-stat"><span>Présences</span><b id="repPresent" style="color:#047857">0</b></div>
-        <div class="rp-stat"><span>Retards</span><b id="repLate" style="color:#b45309">0</b></div>
-        <div class="rp-stat"><span>Absences</span><b id="repAbsent" style="color:#b91c1c">0</b></div>
-      </div>
-      <table class="rp-table"><thead id="reportHead"></thead><tbody id="reportBody"></tbody></table>
-      <div class="rp-foot">
-        <div>Entrée = 1er passage de la journée · Sortie (→) = dernier passage · Retard = arrivée après l'heure prévue · Absent = aucun passage · - = jour pas encore passé · * = modifié manuellement</div>
-        <div class="rp-sign">Visa de la direction</div>
-      </div>
-    </div>
-  </div>
-</section>
-</main>
-
-<!-- EDIT-A-DAY MODAL -->
-<div id="editModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden z-[70] flex items-center justify-center p-4">
-  <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-4">
-    <div class="flex justify-between items-start">
-      <div><h3 class="text-base font-bold text-white">Modifier le pointage</h3><p id="editTitle" class="text-xs text-emerald-300 font-semibold capitalize">--</p></div>
-      <button onclick="closeEdit()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-    </div>
-    <p id="editDevice" class="text-[11px] text-slate-400"></p>
-    <div class="grid grid-cols-2 gap-3 text-xs">
-      <div><label class="block text-slate-400 mb-1">Heure d'entrée</label><input type="time" id="editIn" oninput="editPreview()" class="inp"></div>
-      <div><label class="block text-slate-400 mb-1">Heure de sortie</label><input type="time" id="editOut" class="inp"></div>
-    </div>
-    <p id="editStatus" class="text-xs"></p>
-    <div class="flex flex-wrap gap-2">
-      <button onclick="saveEdit()" class="flex-1 min-w-[140px] py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-600 to-teal-600 text-white"><i class="fa-solid fa-check mr-1.5"></i>Enregistrer (présent)</button>
-      <button onclick="markAbsent()" class="px-4 py-2.5 rounded-xl text-sm font-semibold bg-rose-600/20 text-rose-300 border border-rose-500/30 hover:bg-rose-600 hover:text-white">Marquer absent</button>
-    </div>
-    <button id="editResetBtn" onclick="resetEdit()" class="hidden w-full py-2 rounded-xl text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-rotate-left mr-1.5"></i>Revenir aux données de la pointeuse</button>
-  </div>
-</div>
-
-<!-- EMPLOYEE MODAL -->
-<div id="workerModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden z-50 flex items-center justify-center p-4">
-  <form onsubmit="saveWorker(event)" class="glass rounded-3xl p-6 max-w-md w-full space-y-3 text-xs">
-    <div class="flex justify-between items-center"><h3 id="workerModalTitle" class="text-lg font-bold text-white">Employé</h3><button type="button" onclick="closeWorker()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button></div>
-    <div><label class="block text-slate-400 mb-1">Nom &amp; prénom</label><input id="wName" required class="inp"></div>
-    <div class="grid grid-cols-2 gap-3">
-      <div><label class="block text-slate-400 mb-1">Rayon (optionnel)</label><input id="wDept" list="depts" class="inp">
-        <datalist id="depts"><option>Électronique</option><option>Vêtements / Mode</option><option>Maison &amp; Déco</option><option>Cosmétiques</option><option>Caisse Principale</option></datalist></div>
-      <div><label class="block text-slate-400 mb-1">ID pointeuse</label><input id="wDevId" required pattern="[0-9]{1,9}" inputmode="numeric" title="Chiffres seulement" placeholder="ex : 7" class="inp"></div>
-    </div>
-    <div><label class="block text-slate-400 mb-1">Heure d'arrivée prévue (après = retard)</label><input type="time" id="wStd" value="08:30" class="inp"></div>
-    <p class="text-[10px] text-slate-500">L'ID doit être le même que le numéro de l'employé enregistré sur la pointeuse MB360 (c'est ce qui relie ses passages à son nom).</p>
-    <div class="pt-2 flex justify-end gap-2"><button type="button" onclick="closeWorker()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Annuler</button><button class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">Enregistrer</button></div>
-  </form>
-</div>
-
+<body>
+<div id="app"></div>
+<div id="sheet" class="sheet" onclick="if(event.target===this)closeForm()"></div>
+<noscript><p style="padding:20px">Cette application a besoin de JavaScript.</p></noscript>
 <script>
-/* ===================== SETTINGS ===================== */
+/* ===================== SETTINGS (same database as the website) ===================== */
 const CONFIG = {
   SUPABASE_URL: 'https://sqdtsnuhpdrtgirkweuj.supabase.co',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxZHRzbnVocGRydGdpcmt3ZXVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3MTc4MjYsImV4cCI6MjEwNzI5MzgyNn0.HXl6J_-MVp7D6uku2fZoyQGFgOMFK5ue9V33WzLXEgQ'
 };
-const WEEK_START = 6;                      // week starts on: 6 = Samedi (0 = Dimanche, 1 = Lundi)
-const WEEK_DAYS = 6;                       // days shown (6 = Samedi→Jeudi, 7 = whole week)
+const WEEK_START = 6;          // week starts on: 6 = Samedi (0 = Dimanche, 1 = Lundi)
+const WEEK_DAYS = 6;           // days shown (6 = Samedi → Jeudi, 7 = whole week)
 const DEFAULT_STD = '08:30';
-const FORCE_DEMO = new URLSearchParams(location.search).has('demo');
-const DEMO = FORCE_DEMO || CONFIG.SUPABASE_URL.startsWith('PASTE');
+const CURRENCY = 'DA';
+const BREAK_MINUTES = 0;       // minutes removed from each worked day (e.g. 60 = 1h lunch)
 const DAY_NAMES = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-
-/* ===================== STATE ===================== */
-let workers = [], punches = [], overrides = [], syncStatus = null;
-let pIdx = {}, oIdx = {}, firstSeen = {};
-let weekOffset = 0, currentWeekStart = '', sb = null, busy = false;
+const DOC_BUCKET = 'worker-docs';     // private Supabase Storage bucket (created by add-worker-documents.sql)
+const DOC_MAX_MB = 10;
+const DOC_TYPES = [                   // one PDF per type per employee; add a line here to add another type
+  { key: 'birth_certificate', label: 'Acte de naissance' },
+  { key: 'id_card', label: "Carte d'identité" }
+];
+const DEMO = new URLSearchParams(location.search).has('demo');
 
 /* ===================== HELPERS ===================== */
 const pad = n => String(n).padStart(2, '0');
@@ -251,341 +121,445 @@ const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); r
 const weekStartOf = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); return addDays(x, -((x.getDay() - WEEK_START + 7) % 7)); };
 const hhmm = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
 const t5 = t => String(t || '').slice(0, 5);
-const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const stdOf = w => t5(w && w.std_check_in) || DEFAULT_STD;
 const initials = n => String(n || '?').split(' ').filter(Boolean).map(s => s[0]).slice(0, 2).join('').toUpperCase();
-const avatar = (w, cls) => `<div class="${cls || 'w-10 h-10'} rounded-xl bg-gradient-to-br from-emerald-600/40 to-indigo-600/40 border border-slate-700 flex items-center justify-center text-[11px] font-bold text-emerald-200 shrink-0">${esc(initials(w.full_name))}</div>`;
-const activeWorkers = () => workers.filter(w => w.active).sort((a, b) => a.full_name.localeCompare(b.full_name, 'fr'));
+const toMin = t => { const p = String(t || '0:0').split(':'); return (+p[0] || 0) * 60 + (+p[1] || 0); };
+const fmtH = m => { m = Math.round(m); return Math.floor(m / 60) + 'h' + pad(m % 60); };
+const num = (n, d) => Number(n).toLocaleString('fr-FR', { maximumFractionDigits: d == null ? 0 : d });
+const money = (n, d) => num(n, d) + ' ' + CURRENCY;
+const frDate = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('fr-FR') : '-';
+const sexLabel = x => x === 'M' ? 'Homme' : x === 'F' ? 'Femme' : '-';
+function ageOf(b) {
+  if (!b) return null;
+  const d = new Date(b + 'T00:00:00'), n = new Date();
+  let a = n.getFullYear() - d.getFullYear();
+  if (n < new Date(n.getFullYear(), d.getMonth(), d.getDate())) a--;
+  return a;
+}
+function seniority(h) {
+  if (!h) return '';
+  const s0 = new Date(h + 'T00:00:00'), n = new Date();
+  let mo = (n.getFullYear() - s0.getFullYear()) * 12 + n.getMonth() - s0.getMonth();
+  if (n.getDate() < s0.getDate()) mo--;
+  if (mo < 0) return '';
+  const y = Math.floor(mo / 12), r = mo % 12;
+  return [y ? y + (y > 1 ? ' ans' : ' an') : '', r ? r + ' mois' : ''].filter(Boolean).join(' ') || "moins d'un mois";
+}
 function friendlyError(e) {
   const m = String((e && e.message) || e);
-  if (e && e.code === '23505' || /duplicate key/i.test(m)) return "Cet ID pointeuse est déjà utilisé.";
-  if (/row-level security|permission denied/i.test(m)) return "Accès refusé : votre compte n'est pas autorisé (voir setup.sql).";
+  if (/Failed to fetch|NetworkError|Load failed|network/i.test(m)) return 'Pas de connexion internet.';
+  if (/row-level security|permission denied/i.test(m)) return "Accès refusé : ce compte n'est pas autorisé à voir les données.";
+  if (/Bucket not found/i.test(m)) return "Stockage non configuré : exécutez add-worker-documents.sql dans Supabase.";
+  if (/schema cache|does not exist|Could not find the/i.test(m)) return "La base de données n'est pas à jour : exécutez add-worker-info.sql dans Supabase.";
   return m;
 }
-async function guard(fn) { try { await fn(); } catch (e) { alert('Erreur : ' + friendlyError(e)); } }
+const ICON = {
+  refresh: '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>',
+  left: '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>',
+  right: '<svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>',
+  down: '<svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 21h14"/></svg>'
+};
 
-/* ===================== DATA LAYER ===================== */
-const api = {};
+/* ===================== STATE ===================== */
+let sb = null, workers = [], weeks = {}, weekOffset = 0, busy = false, started = false;
+let docs = {}, docBusy = {}, demoDocs = {};   // docs[workerId] = { kind: {size, at} }
+let timersOn = false, loadError = '', updatedAt = null, query = '', openId = null, listScroll = 0, cameFromList = false, installEvt = null;
+const app = () => document.getElementById('app');
+const weekStartStr = () => ymd(addDays(weekStartOf(new Date()), weekOffset * 7));
+const datesOf = ws => { const s = new Date(ws + 'T00:00:00'); return Array.from({ length: WEEK_DAYS }, (_, i) => { const d = addDays(s, i); return { d, s: ymd(d) }; }); };
+
+/* ===================== DATA ===================== */
+let demoPunches = [];
 if (DEMO) {
-  const mk = (id, n, d, dev) => ({ id, device_user_id: dev, full_name: n, department: d, std_check_in: '08:30:00', active: true });
-  workers = [mk('w1','Redouane Khelifi','Électronique','1'), mk('w2','Amine Benali','Vêtements / Mode','2'), mk('w3','Sarah Toumi','Cosmétiques','3'),
-             mk('w4','Karim Mansouri','Maison & Déco','4'), mk('w5','Yassine Brahimi','Caisse Principale','5')];
-  const offs = [18, 22, 35, 12, 28, 45, 8], ws = weekStartOf(new Date()), todayS = ymd(new Date());
-  for (let k = 0; k < WEEK_DAYS; k++) {
-    const d = addDays(ws, k), ds = ymd(d); if (ds > todayS) continue;
-    workers.forEach((w, i) => {
-      if (i === 3 && k === 1) return;
-      punches.push({ worker_id: w.id, punched_at: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 8 * 60 + offs[(i * 2 + k) % offs.length]).toISOString() });
-      if (ds < todayS) punches.push({ worker_id: w.id, punched_at: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 17 * 60 + 5 + i * 3).toISOString() });
-    });
-  }
-  punches = punches.filter(p => !(ymd(new Date(p.punched_at)) === todayS && (p.worker_id === 'w5' || p.worker_id === 'w4')));
-  syncStatus = { last_run_at: new Date().toISOString(), last_message: 'OK - démo' };
-  api.load = async () => {};
-  api.loadStatus = async () => { syncStatus = Object.assign({}, syncStatus, { last_run_at: new Date().toISOString() }); };
-  api.saveOverride = async o => { overrides = overrides.filter(x => !(x.worker_id === o.worker_id && x.work_date === o.work_date)); overrides.push(o); };
-  api.deleteOverride = async (wid, ds) => { overrides = overrides.filter(x => !(x.worker_id === wid && x.work_date === ds)); };
-  api.saveWorker = async w => { const i = workers.findIndex(x => x.id === w.id); if (i >= 0) Object.assign(workers[i], w); else workers.push(Object.assign({ id: 'w' + Date.now(), active: true, created_at: new Date().toISOString() }, w)); };
-  api.deactivate = async id => { const w = workers.find(x => x.id === id); if (w) w.active = false; };
-} else {
-  sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-  const fetchAll = async (table, build) => {            // Supabase returns max 1000 rows per request: read page by page
-    let all = [], from = 0; const step = 1000;
-    for (;;) {
-      const { data, error } = await build(sb.from(table)).range(from, from + step - 1);
-      if (error) throw error;
-      all = all.concat(data);
-      if (data.length < step) break; from += step;
+  const mk = (id, n, d, dev, x) => Object.assign({ id, device_user_id: dev, full_name: n, department: d, std_check_in: '08:30:00', active: true, created_at: '2022-01-01T00:00:00Z' }, x);
+  workers = [
+    mk('w1', 'Redouane Khelifi', 'Électronique', '1', { birth_date: '1995-03-12', sex: 'M', hire_date: '2022-09-01', hourly_rate: 250 }),
+    mk('w2', 'Amine Benali', 'Vêtements / Mode', '2', { birth_date: '1999-07-30', sex: 'M', hire_date: '2024-02-15', hourly_rate: 220 }),
+    mk('w3', 'Sarah Toumi', 'Cosmétiques', '3', { birth_date: '2001-11-05', sex: 'F', hire_date: '2025-06-01', hourly_rate: 230 }),
+    mk('w4', 'Karim Mansouri', 'Maison & Déco', '4', { birth_date: '1990-01-20', sex: 'M', hire_date: '2020-01-10', hourly_rate: 280 }),
+    mk('w5', 'Yassine Brahimi', 'Caisse Principale', '5', { birth_date: '1997-05-17', sex: 'M', hire_date: '2023-04-03', hourly_rate: null })
+  ];
+  const offs = [18, 22, 35, 12, 28, 45, 8], todayS = ymd(new Date());
+  for (const wo of [0, -1]) {
+    const ws = addDays(weekStartOf(new Date()), wo * 7);
+    for (let k = 0; k < WEEK_DAYS; k++) {
+      const d = addDays(ws, k), ds = ymd(d); if (ds > todayS) continue;
+      workers.forEach((w, i) => {
+        if (i === 3 && k === 1) return;
+        demoPunches.push({ worker_id: w.id, punched_at: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 8, 0 + offs[(i * 2 + k) % offs.length]).toISOString() });
+        if (ds < todayS && !(i === 2 && k === 2)) demoPunches.push({ worker_id: w.id, punched_at: new Date(d.getFullYear(), d.getMonth(), d.getDate(), 17, 5 + i * 3).toISOString() });
+      });
     }
-    return all;
-  };
-  api.load = async () => {
-    const since = new Date(Date.now() - 120 * 864e5);
-    const [w, p, o, s] = await Promise.all([
-      fetchAll('workers', q => q.select('*').order('id')),
-      fetchAll('attendance_punches', q => q.select('id,worker_id,punched_at').gte('punched_at', since.toISOString()).order('id')),
-      fetchAll('attendance_days', q => q.select('*').gte('work_date', ymd(since)).order('id')),
-      sb.from('device_sync_status').select('*').eq('id', 1).maybeSingle()
-    ]);
-    workers = w; punches = p; overrides = o; syncStatus = s.data || null;
-  };
-  api.loadStatus = async () => { const { data, error } = await sb.from('device_sync_status').select('*').eq('id', 1).maybeSingle(); if (!error && data) syncStatus = data; };
-  api.saveOverride = async o => { const { error } = await sb.from('attendance_days').upsert(Object.assign({ updated_at: new Date().toISOString() }, o), { onConflict: 'worker_id,work_date' }); if (error) throw error; };
-  api.deleteOverride = async (wid, ds) => { const { error } = await sb.from('attendance_days').delete().eq('worker_id', wid).eq('work_date', ds); if (error) throw error; };
-  api.saveWorker = async w => {
-    const { error } = w.id ? await sb.from('workers').update(w).eq('id', w.id) : await sb.from('workers').insert(w);
+  }
+}
+async function fetchAll(table, build) {              // Supabase returns max 1000 rows per request: read page by page
+  let all = [], from = 0; const step = 1000;
+  for (;;) {
+    const { data, error } = await build(sb.from(table)).range(from, from + step - 1);
     if (error) throw error;
-  };
-  api.deactivate = async id => { const { error } = await sb.from('workers').update({ active: false }).eq('id', id); if (error) throw error; };
+    all = all.concat(data);
+    if (data.length < step) break; from += step;
+  }
+  return all;
+}
+async function loadWorkers() {
+  if (!DEMO) workers = await fetchAll('workers', q => q.select('*').order('id'));
+  workers = workers.filter(w => w.active).sort((a, b) => a.full_name.localeCompare(b.full_name, 'fr'));
+}
+async function loadWeek(ws, force) {
+  const c = weeks[ws];
+  if (c && !force && Date.now() - c.at < 20000) return c;
+  const start = new Date(ws + 'T00:00:00'), end = addDays(start, 7);
+  let pr, ov = [];
+  if (DEMO) pr = demoPunches.filter(p => new Date(p.punched_at) >= start && new Date(p.punched_at) < end);
+  else {
+    [pr, ov] = await Promise.all([
+      fetchAll('attendance_punches', q => q.select('id,worker_id,punched_at').gte('punched_at', start.toISOString()).lt('punched_at', end.toISOString()).order('id')),
+      fetchAll('attendance_days', q => q.select('*').gte('work_date', ws).lt('work_date', ymd(end)).order('id'))
+    ]);
+  }
+  const pIdx = {}, oIdx = {};
+  pr.forEach(p => { const d = new Date(p.punched_at), k = p.worker_id + '_' + ymd(d); (pIdx[k] = pIdx[k] || []).push(d); });
+  Object.values(pIdx).forEach(a => a.sort((x, y) => x - y));
+  ov.forEach(o => { oIdx[o.worker_id + '_' + o.work_date] = o; });
+  return (weeks[ws] = { pIdx, oIdx, at: Date.now() });
 }
 
 /* ===================== COMPUTE ===================== */
-function recompute() {
-  pIdx = {}; oIdx = {}; firstSeen = {};
-  const seen = (id, ds) => { if (!firstSeen[id] || ds < firstSeen[id]) firstSeen[id] = ds; };
-  workers.forEach(w => { if (w.created_at) seen(w.id, ymd(new Date(w.created_at))); });
-  punches.forEach(p => { const d = new Date(p.punched_at), ds = ymd(d), k = p.worker_id + '_' + ds; (pIdx[k] = pIdx[k] || []).push(d); seen(p.worker_id, ds); });
-  Object.values(pIdx).forEach(a => a.sort((x, y) => x - y));
-  overrides.forEach(o => { oIdx[o.worker_id + '_' + o.work_date] = o; seen(o.worker_id, o.work_date); });
-  renderAll();
-}
-// what happened for one employee on one day (manual edit wins over the machine)
-function dayInfo(w, ds) {
-  const std = stdOf(w), k = w.id + '_' + ds, ov = oIdx[k];
+// one employee, one day: entry = 1st punch, exit = last punch (a manual edit made on the website wins)
+function dayState(w, ds, wk) {
+  const std = stdOf(w), k = w.id + '_' + ds, ov = wk.oIdx[k], today = ymd(new Date());
+  let inT = '', outT = '', manual = false;
   if (ov) {
-    if (ov.status === 'absent') return { absent: true, manual: true };
-    const t = t5(ov.check_in);
-    return { in: t, out: t5(ov.check_out), manual: true, late: t > std };
+    if (ov.status === 'absent') return { st: 'absent' };
+    inT = t5(ov.check_in); outT = t5(ov.check_out); manual = true;
+  } else {
+    const arr = wk.pIdx[k];
+    if (!arr || !arr.length) {
+      const now = new Date(), start = w.hire_date || (w.created_at ? ymd(new Date(w.created_at)) : '0000-00-00');
+      const past = ds < today || (ds === today && now.getHours() >= 12);
+      return { st: past && ds >= start ? 'absent' : 'none' };
+    }
+    const a = arr[0], b = arr[arr.length - 1];
+    inT = hhmm(a); outT = (b - a) >= 5 * 60000 ? hhmm(b) : '';
   }
-  const arr = pIdx[k];
-  if (!arr || !arr.length) return null;
-  const a = arr[0], b = arr[arr.length - 1], t = hhmm(a);            // 1st punch = in, last punch = out
-  return { in: t, out: (b - a) >= 5 * 60000 ? hhmm(b) : '', manual: false, late: t > std };
+  const late = inT > std ? toMin(inT) - toMin(std) : 0;
+  if (!outT) return { st: ds === today ? 'ongoing' : 'noout', in: inT, late, manual };
+  return { st: 'ok', in: inT, out: outT, m: Math.max(0, toMin(outT) - toMin(inT) - BREAK_MINUTES), late, manual };
+}
+function weekTotals(w, dates, wk) {
+  let m = 0, missing = 0, days = 0;
+  dates.forEach(x => { const r = dayState(w, x.s, wk); if (r.st === 'ok') { m += r.m; days++; } else if (r.st === 'noout') missing++; });
+  const rate = Number(w.hourly_rate) || 0;
+  return { m, missing, days, rate, pay: Math.round(m / 60 * rate) };
 }
 
 /* ===================== RENDER ===================== */
-function renderAll() { renderSync(); renderToday(); renderWorkers(); renderReport(); }
+const avatar = (w, big) => w.photo
+  ? `<img class="av${big ? ' big' : ''}" src="${esc(w.photo)}" alt="">`
+  : `<div class="av${big ? ' big' : ''}">${esc(initials(w.full_name))}</div>`;
 
-function renderSync() {
-  const el = document.getElementById('syncBadge');
-  const age = syncStatus && syncStatus.last_run_at ? Date.now() - new Date(syncStatus.last_run_at) : null;
-  const err = syncStatus && /^ERREUR/.test(syncStatus.last_message || '');
-  const ok = age != null && age < 180000 && !err;
-  const txt = age == null ? 'jamais' : (age < 90000 ? `il y a ${Math.round(age / 1000)}s` : `il y a ${Math.round(age / 60000)} min`);
-  el.className = 'flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold border ' + (ok ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25' : 'bg-rose-500/10 text-rose-300 border-rose-500/25');
-  el.innerHTML = `<span class="h-2 w-2 rounded-full ${ok ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}"></span><span>${ok ? 'Pointeuse connectée' : 'Pointeuse hors ligne'} · ${txt}</span>`;
-  document.getElementById('syncLast').textContent = syncStatus && syncStatus.last_run_at ? new Date(syncStatus.last_run_at).toLocaleTimeString('fr-FR') : '--';
-  document.getElementById('syncMsg').textContent = (syncStatus && syncStatus.last_message) || '--';
+function weekBar(dates) {
+  const f = x => DAY_NAMES[x.d.getDay()].slice(0, 3) + ' ' + pad(x.d.getDate()) + '/' + pad(x.d.getMonth() + 1);
+  const sub = weekOffset === 0 ? 'Semaine en cours' : weekOffset === -1 ? 'Semaine dernière' : weekOffset < 0 ? 'Il y a ' + (-weekOffset) + ' semaines' : 'Dans ' + weekOffset + ' semaines';
+  return `<div class="wbar"><button class="ib" onclick="changeWeek(-1)" aria-label="Semaine précédente">${ICON.left}</button>
+    <div class="lbl">${f(dates[0])} → ${f(dates[dates.length - 1])}<small>${sub}</small></div>
+    ${weekOffset !== 0 ? '<button class="now" onclick="changeWeek(0)">Aujourd\'hui</button>' : ''}
+    <button class="ib" onclick="changeWeek(1)" aria-label="Semaine suivante">${ICON.right}</button></div>`;
 }
+function header(sub, backBtn) {
+  return `<div class="top"><div class="logo">M</div><div class="ttl"><b>MAXI BAZAR</b><small>${esc(sub)}</small></div>
+    ${installEvt ? `<button class="pill" onclick="installApp()">Installer</button>` : ''}
+    <button class="ib ${busy ? 'spin' : ''}" onclick="refresh(true)" aria-label="Actualiser">${ICON.refresh}</button></div>`;
+}
+const loadingBlock = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
 
-function renderToday() {
-  const today = ymd(new Date());
-  let present = 0;
-  const rows = activeWorkers().map(w => ({ w, i: dayInfo(w, today) }));
-  rows.sort((a, b) => (a.i && !a.i.absent ? 0 : 1) - (b.i && !b.i.absent ? 0 : 1) || String((a.i && a.i.in) || '').localeCompare((b.i && b.i.in) || ''));
-  document.getElementById('workerCards').innerHTML = rows.map(({ w, i }) => {
-    let badge = '<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-800 text-slate-400">Attendu</span>', line = 'Pas encore passé';
-    if (i && i.absent) { badge = '<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/20">Absent</span>'; line = 'Marqué absent'; }
-    else if (i) {
-      present++;
-      badge = i.out ? '<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-orange-500/15 text-orange-300 border border-orange-500/20">Sorti</span>'
-        : (i.late ? '<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/20">En retard</span>'
-          : '<span class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">Présent</span>');
-      line = `Entrée ${i.in}${i.out ? ' · Sortie ' + i.out : ''}${i.manual ? ' *' : ''}`;
+function cardsHTML() {
+  const ws = weekStartStr(), dates = datesOf(ws), wk = weeks[ws];
+  if (!wk) return loadError ? '' : loadingBlock;
+  const q = query.trim().toLowerCase();
+  const list = workers.filter(w => !q || w.full_name.toLowerCase().includes(q) || String(w.department || '').toLowerCase().includes(q));
+  if (!list.length) return `<div class="empty">${workers.length ? 'Aucun résultat.' : 'Aucun employé.'}</div>`;
+  return list.map(w => {
+    const t = weekTotals(w, dates, wk);
+    return `<button class="wc" onclick="openWorker('${esc(w.id)}')">${avatar(w)}
+      <div class="nm"><b>${esc(w.full_name)}</b><small>${esc(w.department || 'Sans rayon')}${t.missing ? ' · <span class="warn">⚠ sortie manquante</span>' : ''}</small></div>
+      <div class="rt"><b>${fmtH(t.m)}</b><small class="${t.rate ? 'ok' : 'dim'}">${t.rate ? esc(money(t.pay)) : 'tarif ?'}</small></div></button>`;
+  }).join('');
+}
+function listHTML() {
+  const ws = weekStartStr(), dates = datesOf(ws), wk = weeks[ws];
+  let totM = 0, totPay = 0;
+  if (wk) workers.forEach(w => { const t = weekTotals(w, dates, wk); totM += t.m; totPay += t.pay; });
+  return `<div class="wrap">${header(`${workers.length} employé${workers.length > 1 ? 's' : ''}`)}
+    ${weekBar(dates)}
+    ${loadError ? `<div class="err">${esc(loadError)}</div>` : ''}
+    ${wk ? `<div class="sum"><div class="kpi hl"><small>Total salaires</small><b class="ok">${esc(money(totPay))}</b></div><div class="kpi"><small>Heures totales</small><b>${fmtH(totM)}</b></div></div>` : ''}
+    <div class="srow"><input class="search" type="search" placeholder="Rechercher un employé…" value="${esc(query)}" oninput="onSearch(this.value)" autocomplete="off"><button class="addb" onclick="openForm()">+ Ajouter</button></div>
+    <div id="cards">${cardsHTML()}</div>
+    <div class="foot">${updatedAt ? 'Mis à jour à ' + hhmm(updatedAt) : ''}<br><button onclick="logout()">Déconnexion</button></div></div>`;
+}
+function detailHTML(w) {
+  const ws = weekStartStr(), dates = datesOf(ws), wk = weeks[ws], a = ageOf(w.birth_date), sn = seniority(w.hire_date);
+  const t = wk ? weekTotals(w, dates, wk) : null;
+  const days = wk ? dates.map(x => {
+    const r = dayState(w, x.s, wk), nm = `<div class="dn"><b>${DAY_NAMES[x.d.getDay()]}</b><span>${pad(x.d.getDate())}/${pad(x.d.getMonth() + 1)}</span></div>`;
+    const lateTxt = r.late ? `<small class="warn">retard ${r.late} min</small>` : '';
+    if (r.st === 'ok') return `<div class="day">${nm}<div class="dm">${esc(r.in)} → ${esc(r.out)}${r.manual ? ' *' : ''}${lateTxt}</div><div class="dh ok">${fmtH(r.m)}</div></div>`;
+    if (r.st === 'ongoing') return `<div class="day">${nm}<div class="dm">${esc(r.in)} → <span class="mut">…</span>${lateTxt}</div><div class="dh mut">en cours</div></div>`;
+    if (r.st === 'noout') return `<div class="day">${nm}<div class="dm">${esc(r.in)} → <span class="warn">?</span><small class="warn">sortie non enregistrée</small></div><div class="dh warn">⚠</div></div>`;
+    if (r.st === 'absent') return `<div class="day">${nm}<div class="dm bad">Absent</div><div class="dh dim">-</div></div>`;
+    return `<div class="day">${nm}<div class="dm dim">-</div><div class="dh dim"></div></div>`;
+  }).join('') : loadingBlock;
+  const row = (k, v) => `<div class="row"><span>${k}</span><span>${v}</span></div>`;
+  return `<div class="wrap">${header('Fiche employé')}
+    <button class="back" onclick="goBack()">${ICON.left} Tous les employés</button>
+    <div class="hd">${avatar(w, true)}<div style="min-width:0"><h1>${esc(w.full_name)}</h1><p>${esc(w.department || 'Sans rayon')}</p><span class="id">#${esc(w.device_user_id)}</span></div></div>
+    <div class="card"><h2>Informations</h2>
+      ${row('Sexe', esc(sexLabel(w.sex)))}
+      ${row('Date de naissance', w.birth_date ? `${frDate(w.birth_date)} · ${a} ans` : '-')}
+      ${row('Début de travail', w.hire_date ? `${frDate(w.hire_date)}${sn ? '<br><span class="mut" style="font-weight:500;font-size:12px">' + esc(sn) + '</span>' : ''}` : '-')}
+      ${row('Arrivée prévue', esc(stdOf(w)))}
+      ${row('Salaire par heure', w.hourly_rate ? esc(money(w.hourly_rate, 2)) : '<span class="dim">à définir</span>')}
+    </div>
+    ${docsCardHTML(w)}
+    <div class="acts"><button class="btn em" onclick="openForm('${esc(w.id)}')">Modifier</button><button class="btn rs" onclick="removeWorker('${esc(w.id)}')">Supprimer</button></div>
+    ${weekBar(dates)}
+    ${loadError ? `<div class="err">${esc(loadError)}</div>` : ''}
+    ${t ? `<div class="sum"><div class="kpi"><small>Heures de la semaine</small><b>${fmtH(t.m)}</b></div>
+      <div class="kpi hl"><small>Salaire de la semaine</small><b class="ok">${t.rate ? esc(money(t.pay)) : '<span class="dim" style="font-size:15px">tarif à définir</span>'}</b></div></div>` : ''}
+    <div class="card"><h2>Entrées et sorties</h2>${days}
+      ${t ? `<div class="tot"><span>Total · ${t.days} jour${t.days > 1 ? 's' : ''}</span><span>${fmtH(t.m)}${t.rate ? ' · <span class="ok">' + esc(money(t.pay)) + '</span>' : ''}</span></div>` : ''}
+      ${t && t.missing ? `<p class="warn" style="font-size:12px;margin:10px 0 0">⚠ ${t.missing} jour(s) sans sortie enregistrée ne sont pas comptés. Corrigez-les sur le site web.</p>` : ''}
+    </div>
+    <div class="foot">${BREAK_MINUTES ? `Pause de ${BREAK_MINUTES} min déduite chaque jour · ` : 'Pause non déduite · '}Heures = dernière sortie − première entrée</div></div>`;
+}
+/* ===================== DOCUMENTS (PDF per employee) ===================== */
+const docPath = (wid, kind) => wid + '/' + kind + '.pdf';
+const fmtSize = b => b >= 1048576 ? (b / 1048576).toFixed(1).replace('.', ',') + ' Mo' : Math.max(1, Math.round(b / 1024)) + ' Ko';
+function docsCardHTML(w) {
+  const mine = docs[w.id];
+  const rows = DOC_TYPES.map(t => {
+    const d = mine && mine[t.key], busyK = docBusy[w.id + '_' + t.key], k = esc(t.key), id = esc(w.id);
+    const pick = label => `<label class="sm${d ? '' : ' em'}${busyK ? ' off' : ''}">${label}<input type="file" accept="application/pdf,.pdf" onchange="uploadDoc('${id}','${k}',this)"></label>`;
+    return `<div class="doc"><div class="dtop"><div class="di${d ? '' : ' none'}">PDF</div>
+      <div class="dt"><b>${esc(t.label)}</b><small>${busyK ? 'Envoi en cours…' : !mine ? 'Chargement…' : d ? esc(fmtSize(d.size)) + (d.at ? ' · ajouté le ' + esc(new Date(d.at).toLocaleDateString('fr-FR')) : '') : '<span class="dim">Aucun document</span>'}</small></div></div>
+      <div class="da">${d ? `<button class="sm em${busyK ? ' off' : ''}" onclick="downloadDoc('${id}','${k}')">${ICON.down.replace('<svg', '<svg style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-3px;margin-right:5px"')}Télécharger</button>${pick('Remplacer')}<button class="sm rs${busyK ? ' off' : ''}" onclick="deleteDoc('${id}','${k}')" aria-label="Supprimer">✕</button>` : pick('+ Ajouter le PDF')}</div></div>`;
+  }).join('');
+  return `<div class="card"><h2>Documents</h2>${rows}</div>`;
+}
+async function loadDocs(wid) {
+  try {
+    const out = {};
+    if (DEMO) { Object.keys(demoDocs[wid] || {}).forEach(k => { out[k] = { size: demoDocs[wid][k].size, at: demoDocs[wid][k].at }; }); }
+    else {
+      const { data, error } = await sb.storage.from(DOC_BUCKET).list(wid, { limit: 50 });
+      if (error) throw error;
+      (data || []).forEach(f => { const k = f.name.replace(/\.pdf$/i, ''); if (DOC_TYPES.some(t => t.key === k)) out[k] = { size: f.metadata && f.metadata.size || 0, at: f.updated_at || f.created_at }; });
     }
-    return `<div class="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-2">
-      <div class="flex items-center gap-3 min-w-0">${avatar(w)}<div class="min-w-0"><p class="text-xs font-bold text-slate-200 truncate">${esc(w.full_name)}</p><p class="text-[10px] text-slate-400 font-mono">${line}</p></div></div>${badge}</div>`;
-  }).join('') || '<p class="text-xs text-slate-500">Aucun employé. Ajoutez-en dans l\'onglet Employés.</p>';
-  document.getElementById('todayCountBadge').textContent = `${present} présent${present > 1 ? 's' : ''}`;
-
-  const wmap = Object.fromEntries(workers.map(w => [w.id, w]));
-  const list = punches.filter(p => ymd(new Date(p.punched_at)) === today).sort((a, b) => new Date(b.punched_at) - new Date(a.punched_at)).slice(0, 12);
-  document.getElementById('recentPunches').innerHTML = list.map(p => {
-    const w = wmap[p.worker_id] || { full_name: '?' };
-    return `<div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/60 border border-slate-800"><div class="flex items-center gap-2.5">${avatar(w, 'w-7 h-7')}<span class="text-xs font-semibold text-slate-200">${esc(w.full_name)}</span></div><span class="text-xs font-mono text-emerald-300">${hhmm(new Date(p.punched_at))}</span></div>`;
-  }).join('') || '<p class="text-xs text-slate-500">Aucun passage aujourd\'hui.</p>';
+    docs[wid] = out;
+  } catch (e) { docs[wid] = docs[wid] || {}; loadError = friendlyError(e); }
+  if (openId === wid) render();
+}
+async function uploadDoc(wid, kind, input) {
+  const f = input.files && input.files[0]; input.value = ''; if (!f) return;
+  if (!(f.type === 'application/pdf' || /\.pdf$/i.test(f.name))) return alert('Veuillez choisir un fichier PDF.');
+  if (f.size > DOC_MAX_MB * 1048576) return alert(`Fichier trop lourd (maximum ${DOC_MAX_MB} Mo).`);
+  const bk = wid + '_' + kind; docBusy[bk] = true; render();
+  try {
+    if (DEMO) (demoDocs[wid] = demoDocs[wid] || {})[kind] = { file: f, size: f.size, at: new Date().toISOString() };
+    else {
+      const { error } = await sb.storage.from(DOC_BUCKET).upload(docPath(wid, kind), f, { upsert: true, contentType: 'application/pdf' });
+      if (error) throw error;
+    }
+    await loadDocs(wid);
+  } catch (e) { alert('Erreur : ' + friendlyError(e)); }
+  docBusy[bk] = false; render();
+}
+async function downloadDoc(wid, kind) {
+  const w = workers.find(x => x.id === wid), t = DOC_TYPES.find(x => x.key === kind); if (!w || !t) return;
+  const name = (t.label + ' - ' + w.full_name).replace(/[\\/:*?"<>|]+/g, ' ') + '.pdf';
+  try {
+    let url;
+    if (DEMO) url = URL.createObjectURL(demoDocs[wid][kind].file);
+    else {
+      const { data, error } = await sb.storage.from(DOC_BUCKET).createSignedUrl(docPath(wid, kind), 120, { download: name });
+      if (error) throw error; url = data.signedUrl;
+    }
+    const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  } catch (e) { alert('Erreur : ' + friendlyError(e)); }
+}
+async function deleteDoc(wid, kind) {
+  const t = DOC_TYPES.find(x => x.key === kind);
+  if (!confirm(`Supprimer « ${t.label} » ?\n\nLe fichier sera effacé définitivement.`)) return;
+  const bk = wid + '_' + kind; docBusy[bk] = true; render();
+  try {
+    if (DEMO) delete (demoDocs[wid] || {})[kind];
+    else { const { error } = await sb.storage.from(DOC_BUCKET).remove([docPath(wid, kind)]); if (error) throw error; }
+    await loadDocs(wid);
+  } catch (e) { alert('Erreur : ' + friendlyError(e)); }
+  docBusy[bk] = false; render();
 }
 
-function renderWorkers() {
-  const today = ymd(new Date());
-  document.getElementById('workerTable').innerHTML = activeWorkers().map(w => {
-    const i = dayInfo(w, today);
-    return `<tr class="hover:bg-slate-900/40">
-      <td class="py-3 pl-2"><div class="flex items-center gap-3">${avatar(w, 'w-8 h-8')}<p class="font-bold text-white">${esc(w.full_name)}</p></div></td>
-      <td class="py-3">${esc(w.department || '-')}</td>
-      <td class="py-3"><span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-mono">#${esc(w.device_user_id)}</span></td>
-      <td class="py-3 font-mono text-slate-400">${stdOf(w)}</td>
-      <td class="py-3 font-mono">${i && !i.absent ? `<span class="${i.late ? 'text-amber-400' : 'text-emerald-400'} font-semibold">${esc(i.in)}</span>` : '<span class="text-slate-500">' + (i && i.absent ? 'Absent' : 'Non pointé') + '</span>'}</td>
-      <td class="py-3 text-right pr-2 whitespace-nowrap">
-        <button onclick="openWorker('${w.id}')" title="Modifier" class="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 text-[11px]"><i class="fa-solid fa-pen"></i></button>
-        <button onclick="removeWorker('${w.id}')" title="Supprimer" class="ml-1 px-2.5 py-1 rounded-lg bg-rose-600/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/30 text-[11px]"><i class="fa-solid fa-trash"></i></button>
-      </td></tr>`;
-  }).join('') || '<tr><td colspan="6" class="py-6 text-center text-slate-500">Aucun employé pour le moment.</td></tr>';
+function renderLogin(msg) {
+  started = false;
+  app().innerHTML = `<div class="login"><form onsubmit="doLogin(event)"><div class="logo">M</div><h1>MAXI BAZAR</h1><p class="s">Personnel · connexion</p>
+    <input id="em" type="email" required placeholder="Email" autocomplete="username" inputmode="email"><input id="pw" type="password" required placeholder="Mot de passe" autocomplete="current-password">
+    <button class="go">Se connecter</button><div class="le" id="le">${esc(msg || '')}</div></form></div>`;
+}
+function render() {
+  if (!started) return;
+  const w = openId && workers.find(x => x.id === openId);
+  app().innerHTML = w ? detailHTML(w) : listHTML();
 }
 
-/* ---------- weekly report ---------- */
-function changeWeek(d) { weekOffset = d === 0 ? 0 : weekOffset + d; renderReport(); }
 
-function renderReport() {
-  const ws = addDays(weekStartOf(new Date()), weekOffset * 7);
-  const dates = Array.from({ length: WEEK_DAYS }, (_, i) => { const d = addDays(ws, i); return { d, s: ymd(d) }; });
-  currentWeekStart = dates[0].s;
-  const fmt = d => d.toLocaleDateString('fr-FR');
-  document.getElementById('reportDateText').textContent = `Semaine du ${fmt(dates[0].d)} au ${fmt(dates[dates.length - 1].d)}`;
-  document.getElementById('reportEditDate').textContent = fmt(new Date());
-
-  const now = new Date(), todayS = ymd(now), afternoon = now.getHours() >= 12;
-  const rows = activeWorkers().map(w => ({ w, removed: false }));
-  workers.filter(w => !w.active).forEach(w => { if (dates.some(x => dayInfo(w, x.s))) rows.push({ w, removed: true }); });   // deleted employees stay in the weeks they worked
-
-  document.getElementById('reportHead').innerHTML = '<tr><th class="rp-th-name">Employé</th>' +
-    dates.map(x => `<th>${DAY_NAMES[x.d.getDay()]}<small>${pad(x.d.getDate())}/${pad(x.d.getMonth() + 1)}</small></th>`).join('') + '<th>Présent</th><th>Retard</th><th>Absent</th></tr>';
-
-  let tp = 0, tl = 0, ta = 0;
-  document.getElementById('reportBody').innerHTML = rows.map(({ w, removed }) => {
-    let p = 0, l = 0, a = 0;
-    const cells = dates.map(x => {
-      const attr = `class="rp-cell" onclick="openEdit('${w.id}','${x.s}')" title="Cliquer pour modifier"`;
-      const i = dayInfo(w, x.s);
-      if (i && !i.absent) { p++; if (i.late) l++; return `<td ${attr}><span class="${i.late ? 'rp-late' : 'rp-ok'}">${esc(i.in)}${i.manual ? '*' : ''}</span>${i.out ? `<span class="rp-exit">→ ${esc(i.out)}</span>` : ''}</td>`; }
-      if (i && i.absent) { a++; return `<td ${attr}><span class="rp-abs">Absent*</span></td>`; }
-      const pastDay = x.s < todayS || (x.s === todayS && afternoon);
-      // absent only from the day the employee first appears (a new hire is not absent for earlier days)
-      if (pastDay && !removed && x.s >= (firstSeen[w.id] || todayS)) { a++; return `<td ${attr}><span class="rp-abs">Absent</span></td>`; }
-      return `<td ${attr}><span class="rp-pend">-</span></td>`;
-    }).join('');
-    tp += p; tl += l; ta += a;
-    return `<tr><td class="rp-name">${esc(w.full_name)}${removed ? ' <span style="font-weight:400;color:#94a3b8;font-size:.8em">(retiré)</span>' : ''}${w.department ? `<span class="rp-dept">${esc(w.department)}</span>` : ''}</td>${cells}<td class="rp-tot rp-ok">${p}</td><td class="rp-tot rp-late">${l}</td><td class="rp-tot rp-abs">${a}</td></tr>`;
-  }).join('') || `<tr><td colspan="${WEEK_DAYS + 4}" style="padding:2em;color:#94a3b8">Aucun employé.</td></tr>`;
-  document.getElementById('repStaff').textContent = rows.length;
-  document.getElementById('repPresent').textContent = tp;
-  document.getElementById('repLate').textContent = tl;
-  document.getElementById('repAbsent').textContent = ta;
+/* ===================== ADD / EDIT / REMOVE EMPLOYEES ===================== */
+let editingId = null, photoState;                 // photoState: undefined = unchanged, null = removed, text = new photo
+function formHTML(w) {
+  const v = k => esc(w && w[k] != null ? w[k] : '');
+  return `<form class="f" onsubmit="saveForm(event)"><h3>${w ? "Modifier l'employé" : 'Ajouter un employé'}</h3>
+    <div class="ph"><div class="pv" id="fPhotoPrev">${w && w.photo ? `<img src="${esc(w.photo)}" alt="">` : '👤'}</div>
+      <div class="pb"><label>Photo<input id="fPhotoFile" type="file" accept="image/*" onchange="pickPhoto(this)"></label><button type="button" onclick="clearPhoto()">Retirer</button></div></div>
+    <label>Nom &amp; prénom</label><input id="fName" required value="${v('full_name')}" autocomplete="off">
+    <div class="g2"><div><label>Date de naissance</label><input type="date" id="fBirth" value="${v('birth_date')}"></div>
+      <div><label>Sexe</label><select id="fSex"><option value="">-</option><option value="M"${w && w.sex === 'M' ? ' selected' : ''}>Homme</option><option value="F"${w && w.sex === 'F' ? ' selected' : ''}>Femme</option></select></div></div>
+    <div class="g2"><div><label>Début de travail</label><input type="date" id="fHire" value="${v('hire_date')}"></div>
+      <div><label>Salaire par heure (${CURRENCY})</label><input type="number" id="fRate" min="0" step="0.01" inputmode="decimal" placeholder="ex : 250" value="${v('hourly_rate')}"></div></div>
+    <div class="g2"><div><label>Rayon (optionnel)</label><input id="fDept" list="depts" value="${v('department')}"><datalist id="depts"><option>Électronique</option><option>Vêtements / Mode</option><option>Maison &amp; Déco</option><option>Cosmétiques</option><option>Caisse Principale</option></datalist></div>
+      <div><label>ID pointeuse</label><input id="fDev" required pattern="[0-9]{1,9}" inputmode="numeric" placeholder="ex : 7" value="${v('device_user_id')}"></div></div>
+    <label>Heure d'arrivée prévue (après = retard)</label><input type="time" id="fStd" value="${w ? stdOf(w) : DEFAULT_STD}">
+    <p class="note">L'ID doit être le même que le numéro de l'employé enregistré sur la pointeuse (c'est ce qui relie ses passages à son nom).</p>
+    <div class="acts" style="margin-top:18px"><button type="button" class="btn" onclick="closeForm()">Annuler</button><button class="btn em">Enregistrer</button></div></form>`;
 }
-
-/* ===================== EDIT A DAY ===================== */
-let edit = { wid: '', ds: '' };
-function openEdit(wid, ds) {
-  const w = workers.find(x => x.id === wid); if (!w) return;
-  edit = { wid, ds };
-  const ov = oIdx[wid + '_' + ds], arr = pIdx[wid + '_' + ds], info = dayInfo(w, ds);
-  document.getElementById('editTitle').textContent = `${w.full_name} - ${new Date(ds + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })}`;
-  document.getElementById('editDevice').innerHTML = arr && arr.length
-    ? `<i class="fa-solid fa-fingerprint text-emerald-400 mr-1"></i>Pointeuse : ${arr.map(hhmm).join(' · ')}`
-    : '<i class="fa-solid fa-circle-info mr-1"></i>Aucun passage enregistré par la pointeuse ce jour-là.';
-  document.getElementById('editIn').value = info && !info.absent ? info.in : (ds === ymd(new Date()) ? hhmm(new Date()) : '08:00');
-  document.getElementById('editOut').value = info && !info.absent ? info.out : '';
-  document.getElementById('editResetBtn').classList.toggle('hidden', !ov);
-  editPreview();
-  document.getElementById('editModal').classList.remove('hidden');
-}
-function closeEdit() { document.getElementById('editModal').classList.add('hidden'); }
-function editPreview() {
-  const t = document.getElementById('editIn').value, w = workers.find(x => x.id === edit.wid), std = stdOf(w);
-  document.getElementById('editStatus').innerHTML = !t ? '' : (t > std ? `<span class="text-amber-400 font-semibold">Statut : en retard</span> (après ${std})` : '<span class="text-emerald-400 font-semibold">Statut : à l\'heure</span>');
-}
-async function saveEdit() {
-  const t = document.getElementById('editIn').value, ex = document.getElementById('editOut').value || null;
-  if (!t) return alert("Indiquez l'heure d'entrée.");
-  if (ex && ex <= t) return alert("L'heure de sortie doit être après l'heure d'entrée.");
-  await guard(async () => { await api.saveOverride({ worker_id: edit.wid, work_date: edit.ds, status: 'present', check_in: t, check_out: ex }); await refresh(); closeEdit(); });
-}
-async function markAbsent() {
-  if (!confirm('Marquer cet employé absent ce jour-là ?')) return;
-  await guard(async () => { await api.saveOverride({ worker_id: edit.wid, work_date: edit.ds, status: 'absent', check_in: null, check_out: null }); await refresh(); closeEdit(); });
-}
-async function resetEdit() { await guard(async () => { await api.deleteOverride(edit.wid, edit.ds); await refresh(); closeEdit(); }); }
-
-/* ===================== EMPLOYEES ===================== */
-let editingWorker = null;
-function openWorker(id) {
-  editingWorker = id || null;
+function openForm(id) {
+  editingId = id || null; photoState = undefined;
   const w = id ? workers.find(x => x.id === id) : null;
-  document.getElementById('workerModalTitle').textContent = w ? "Modifier l'employé" : 'Ajouter un employé';
-  document.getElementById('wName').value = w ? w.full_name : '';
-  document.getElementById('wDept').value = w ? (w.department || '') : '';
-  document.getElementById('wDevId').value = w ? w.device_user_id : '';
-  document.getElementById('wStd').value = w ? stdOf(w) : DEFAULT_STD;
-  document.getElementById('workerModal').classList.remove('hidden');
+  const sh = document.getElementById('sheet');
+  sh.innerHTML = '<div class="box">' + formHTML(w) + '</div>';
+  sh.classList.add('on'); document.body.style.overflow = 'hidden';
 }
-function closeWorker() { document.getElementById('workerModal').classList.add('hidden'); }
-async function saveWorker(e) {
+function closeForm() { document.getElementById('sheet').classList.remove('on'); document.body.style.overflow = ''; }
+function setPhotoPrev(src) { document.getElementById('fPhotoPrev').innerHTML = src ? `<img src="${esc(src)}" alt="">` : '👤'; }
+function resizePhoto(file) {                       // square 192px JPEG (~10 KB), stored directly in the database
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const S = 192, c = document.createElement('canvas'); c.width = c.height = S;
+      const m = Math.min(img.width, img.height);
+      c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, S, S);
+      URL.revokeObjectURL(url); res(c.toDataURL('image/jpeg', 0.78));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('Image illisible')); };
+    img.src = url;
+  });
+}
+async function pickPhoto(input) {
+  const f = input.files && input.files[0]; if (!f) return;
+  try { photoState = await resizePhoto(f); setPhotoPrev(photoState); } catch (e) { alert('Photo : ' + e.message); }
+}
+function clearPhoto() { photoState = null; const f = document.getElementById('fPhotoFile'); if (f) f.value = ''; setPhotoPrev(null); }
+
+async function saveForm(e) {
   e.preventDefault();
-  const rec = { full_name: document.getElementById('wName').value.trim(), department: document.getElementById('wDept').value.trim() || null,
-    device_user_id: document.getElementById('wDevId').value.trim(), std_check_in: document.getElementById('wStd').value || DEFAULT_STD };
-  const clash = workers.find(w => w.device_user_id === rec.device_user_id && w.id !== editingWorker);
-  if (clash && clash.active) return alert(`Cet ID pointeuse est déjà utilisé par ${clash.full_name}.`);
-  if (editingWorker) rec.id = editingWorker;
-  else if (clash) { rec.id = clash.id; rec.active = true; }          // same ID as a deleted employee: bring them back
-  await guard(async () => { await api.saveWorker(rec); await refresh(); closeWorker(); });
+  const g = id => document.getElementById(id).value, rate = g('fRate');
+  const rec = { full_name: g('fName').trim(), department: g('fDept').trim() || null, device_user_id: g('fDev').trim(), std_check_in: g('fStd') || DEFAULT_STD,
+    birth_date: g('fBirth') || null, sex: g('fSex') || null, hire_date: g('fHire') || null,
+    hourly_rate: rate === '' ? null : Math.max(0, parseFloat(rate) || 0) };
+  if (photoState !== undefined) rec.photo = photoState;
+  try {
+    // is this machine ID already used? (also by a removed employee: then we bring that person back)
+    let same = [];
+    if (DEMO) same = workers.filter(x => x.device_user_id === rec.device_user_id);
+    else { const r = await sb.from('workers').select('id,active,full_name').eq('device_user_id', rec.device_user_id); if (r.error) throw r.error; same = r.data || []; }
+    const clash = same.find(x => x.id !== editingId);
+    if (clash && clash.active) return alert(`Cet ID pointeuse est déjà utilisé par ${clash.full_name}.`);
+    const id = editingId || (clash ? clash.id : null);
+    if (!editingId && clash) rec.active = true;
+    if (DEMO) {
+      const i = workers.findIndex(x => x.id === id);
+      if (i >= 0) Object.assign(workers[i], rec); else workers.push(Object.assign({ id: 'w' + Date.now(), active: true, created_at: new Date().toISOString() }, rec));
+    } else {
+      const { error } = id ? await sb.from('workers').update(rec).eq('id', id) : await sb.from('workers').insert(Object.assign({ active: true }, rec));
+      if (error) throw error;
+    }
+    closeForm();
+    await refresh(true);
+  } catch (err) { alert('Erreur : ' + friendlyError(err)); }
 }
 async function removeWorker(id) {
   const w = workers.find(x => x.id === id); if (!w) return;
-  if (!confirm(`Supprimer ${w.full_name} ?\n\nIl disparaît de la liste. Son historique reste dans les rapports des semaines passées.`)) return;
-  await guard(async () => { await api.deactivate(id); await refresh(); });
+  if (!confirm(`Supprimer ${w.full_name} ?\n\nIl disparaît de la liste. Son historique reste conservé.`)) return;
+  try {
+    if (DEMO) w.active = false;
+    else { const { error } = await sb.from('workers').update({ active: false }).eq('id', id); if (error) throw error; }
+    cameFromList = false; location.hash = '';
+    await refresh(true);
+  } catch (err) { alert('Erreur : ' + friendlyError(err)); }
 }
 
-/* ===================== PDF / PRINT ===================== */
-function buildFitSheet() {
-  const page = document.getElementById('pdfReportContainer').cloneNode(true);
-  page.removeAttribute('id'); page.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
-  page.classList.add('rp-page'); document.body.appendChild(page);
-  const fits = () => page.scrollHeight <= page.clientHeight + 1;
-  const shrink = (start, min) => { let fs = start; page.style.fontSize = fs + 'px'; while (!fits() && fs > min) { fs -= .5; page.style.fontSize = fs + 'px'; } };
-  shrink(15, 11);
-  if (!fits()) { page.classList.add('rp-compact'); shrink(14, 6); }
-  if (!fits()) { page.style.height = 'auto'; page.style.overflow = 'visible'; }
-  return page;
+/* ===================== ACTIONS ===================== */
+function onSearch(v) { query = v; const c = document.getElementById('cards'); if (c) c.innerHTML = cardsHTML(); }
+function openWorker(id) { listScroll = window.scrollY; cameFromList = true; location.hash = '#w=' + encodeURIComponent(id); }
+function goBack() { if (cameFromList) { cameFromList = false; history.back(); } else location.hash = ''; }
+function route() {
+  const m = location.hash.match(/^#w=(.+)$/);
+  openId = m ? decodeURIComponent(m[1]) : null;
+  render();
+  window.scrollTo(0, openId ? 0 : listScroll);
+  if (openId) loadDocs(openId);
 }
-function exportPDF() {
-  if (typeof html2pdf === 'undefined') return alert("Le module PDF n'est pas chargé. Vérifiez la connexion internet.");
-  const page = buildFitSheet(); page.classList.add('rp-visible');
-  html2pdf().set({ margin: 0, filename: `Maxi_Bazar_Semaine_${currentWeekStart}.pdf`, image: { type: 'jpeg', quality: .98 },
-    html2canvas: { scale: 2, backgroundColor: '#ffffff', windowWidth: 1123, scrollX: 0, scrollY: 0 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }, pagebreak: { mode: ['css', 'legacy'], avoid: 'tr' } })
-    .from(page).save().then(() => page.remove()).catch(e => { page.remove(); alert('Erreur PDF : ' + e.message); });
+async function changeWeek(d) {
+  weekOffset = d === 0 ? 0 : weekOffset + d;
+  render();                                                   // shows the loading blocks right away
+  await refresh(false);
 }
-function printReport() {
-  const page = buildFitSheet(); page.id = 'printSheet';
-  document.body.classList.add('printing-sheet');
-  const cleanup = () => { document.body.classList.remove('printing-sheet'); page.remove(); window.removeEventListener('afterprint', cleanup); };
-  window.addEventListener('afterprint', cleanup);
-  setTimeout(() => window.print(), 80);
-  setTimeout(cleanup, 120000);
+async function refresh(force, silent) {
+  if (busy) return;
+  busy = true; loadError = '';
+  if (!silent) render();
+  try {
+    if (!workers.length || force) await loadWorkers();
+    await loadWeek(weekStartStr(), force);
+    updatedAt = new Date();
+  } catch (e) { loadError = friendlyError(e); }
+  busy = false; render();
 }
-
-/* ===================== TABS / CLOCK / BOOT ===================== */
-const TAB_ON = 'tab-btn flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg';
-const TAB_OFF = 'tab-btn flex-1 min-w-[140px] py-2.5 px-4 rounded-xl text-xs sm:text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/40 flex items-center justify-center gap-2';
-function switchTab(id) {
-  document.querySelectorAll('.tab-content').forEach(e => e.classList.add('hidden'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.className = TAB_OFF);
-  document.getElementById('section-' + id).classList.remove('hidden');
-  document.getElementById('tab-' + id).className = TAB_ON;
+async function installApp() { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (_) {} installEvt = null; render(); }
+async function doLogin(e) {
+  e.preventDefault();
+  const le = document.getElementById('le'); le.textContent = '';
+  const { error } = await sb.auth.signInWithPassword({ email: document.getElementById('em').value.trim(), password: document.getElementById('pw').value });
+  if (error) { le.textContent = 'Email ou mot de passe incorrect.'; return; }
+  start();
 }
-function startClock() {
-  const tick = () => {
-    const n = new Date();
-    document.getElementById('liveClock').textContent = n.toLocaleTimeString('fr-FR');
-    const s = n.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    document.getElementById('liveDate').textContent = s.charAt(0).toUpperCase() + s.slice(1);
-  };
-  tick(); setInterval(tick, 1000);
-}
-async function refresh() { await api.load(); recompute(); }
+async function logout() { if (sb) await sb.auth.signOut(); workers = []; weeks = {}; docs = {}; renderLogin(); }
 
 async function start() {
-  startClock(); switchTab('today');
-  try { await refresh(); } catch (e) { alert('Erreur de chargement : ' + friendlyError(e)); }
-  // keep everything fresh without any special Supabase setting: re-read every 30s (only while the page is visible and no popup is open)
-  setInterval(async () => {
-    if (document.hidden || busy) return;
-    const popupOpen = ['editModal', 'workerModal'].some(id => !document.getElementById(id).classList.contains('hidden'));
-    busy = true;
-    try { if (popupOpen) { await api.loadStatus(); renderSync(); } else { await refresh(); } } catch (e) { console.warn('refresh', e); }
-    busy = false;
-  }, 30000);
-  setInterval(renderSync, 10000);
-  let day = ymd(new Date());
-  setInterval(() => { const d = ymd(new Date()); if (d !== day) { day = d; recompute(); } }, 30000);   // new day → refresh the screen
+  started = true; openId = null;
+  if (!timersOn) {
+    timersOn = true;
+    window.addEventListener('hashchange', route);
+    const typing = () => document.activeElement && document.activeElement.tagName === 'INPUT';
+    setInterval(() => { if (!document.hidden && started && !typing()) refresh(true, true); }, 60000);     // keep fresh while the app is open
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && started && (!updatedAt || Date.now() - updatedAt > 30000)) refresh(true, true); });
+  }
+  location.hash = '';
+  render();
+  await refresh(true);
+  route();
 }
-async function logout() { await sb.auth.signOut(); location.reload(); }
-
-if (DEMO) {
-  document.getElementById('demoPill').classList.remove('hidden');
-  start();
-} else {
-  sb.auth.getSession().then(({ data }) => {
-    if (data.session) { document.getElementById('logoutBtn').classList.remove('hidden'); start(); }
-    else document.getElementById('loginOverlay').classList.remove('hidden');
-  });
-  document.getElementById('loginForm').addEventListener('submit', async e => {
-    e.preventDefault();
-    const { error } = await sb.auth.signInWithPassword({ email: document.getElementById('loginEmail').value.trim(), password: document.getElementById('loginPassword').value });
-    if (error) document.getElementById('loginError').textContent = 'Email ou mot de passe incorrect.';
-    else location.reload();
-  });
+async function boot() {
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; render(); });
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if (DEMO) { await start(); return; }
+  if (typeof supabase === 'undefined') { app().innerHTML = '<div class="login"><div class="err">Connexion internet nécessaire pour la première ouverture. Vérifiez votre réseau puis rechargez.</div></div>'; return; }
+  sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+  const { data } = await sb.auth.getSession();
+  if (data.session) start(); else renderLogin();
 }
+boot();
 </script>
 </body>
 </html>
