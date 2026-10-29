@@ -24,7 +24,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:radial-gradient(circl
 .rp-stats{display:flex;gap:.8em;margin:1em 0 1.1em}
 .rp-stat{flex:1;border:1px solid #e2e8f0;background:#f8fafc;border-radius:.6em;padding:.5em .9em;display:flex;justify-content:space-between;align-items:center}
 .rp-stat span{font-size:.72em;color:#64748b;text-transform:uppercase;font-weight:700;letter-spacing:.05em}.rp-stat b{font-size:1.5em}
-.rp-table{width:100%;border-collapse:collapse}
+.rp-table{width:100%;border-collapse:collapse;table-layout:fixed}
 .rp-table th{background:#0f172a;color:#fff;padding:.5em .4em;font-size:.8em;font-weight:700;text-align:center}
 .rp-table th small{display:block;font-weight:400;opacity:.7;font-size:.85em}
 .rp-table th.rp-th-name{text-align:left;padding-left:.8em;border-radius:.5em 0 0 0}.rp-table th:last-child{border-radius:0 .5em 0 0}
@@ -40,6 +40,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:radial-gradient(circl
 .rp-tot{font-weight:800;font-size:1.05em}
 .rp-foot{display:flex;justify-content:space-between;align-items:flex-end;gap:2em;margin-top:1.1em;font-size:.75em;color:#64748b}
 .rp-sign{border-top:1px solid #94a3b8;min-width:14em;text-align:center;padding-top:.3em;color:#475569}
+/* section titles above each table */
+.rp-sec{display:flex;align-items:baseline;gap:.5em;margin:1.15em 0 .45em;font-size:.82em;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#0f172a;page-break-after:avoid}
+.rp-sec::before{content:"";align-self:center;width:.32em;height:1.05em;background:#059669;border-radius:.2em}
+.rp-sec.out::before{background:#2563eb}
+.rp-sec small{font-weight:500;text-transform:none;letter-spacing:0;color:#64748b;font-size:.82em}
+.rp-out{color:#1d4ed8;font-weight:700;font-family:ui-monospace,Menlo,monospace}
+.rp-none{color:#cbd5e1}
+.rp-table tr{page-break-inside:avoid}
+/* day groups: thin divider before each day's Entrée column and before the totals */
+.rp-table td.rp-grp{border-left:1px solid #cbd5e1}
+.rp-table th.rp-grp{border-left:1px solid rgba(255,255,255,.18)}
+.rp-sub{font-weight:600;font-size:.68em;opacity:.75;padding-top:.15em!important;padding-bottom:.15em!important}
+.rp-compact .rp-sec{margin:.5em 0 .25em;font-size:.72em}
 .rp-page{position:fixed;left:-20000px;top:0;width:1120px;height:778px;min-width:0;overflow:hidden;display:flex;flex-direction:column;border-radius:0;box-shadow:none}
 .rp-page>*{flex-shrink:0}.rp-page .rp-foot{margin-top:auto;padding-top:1em}
 .rp-page.rp-visible{left:0;z-index:99999}.rp-page .rp-cell{cursor:default}
@@ -179,9 +192,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:radial-gradient(circl
         <div class="rp-stat"><span>Retards</span><b id="repLate" style="color:#b45309">0</b></div>
         <div class="rp-stat"><span>Absences</span><b id="repAbsent" style="color:#b91c1c">0</b></div>
       </div>
-      <table class="rp-table"><thead id="reportHead"></thead><tbody id="reportBody"></tbody></table>
+      <table class="rp-table"><colgroup id="reportCols"></colgroup><thead id="reportHead"></thead><tbody id="reportBody"></tbody></table>
       <div class="rp-foot">
-        <div>Entrée = 1er passage de la journée · Sortie (→) = dernier passage · Retard = arrivée après l'heure prévue · Absent = aucun passage · - = jour pas encore passé · * = modifié manuellement</div>
+        <div>Chaque jour : <b style="color:#047857">Entrée</b> (arrivée) puis <b style="color:#1d4ed8">Sortie</b> (départ) · Retard = arrivée après l'heure prévue · Absent = aucun passage · — = pas de sortie · - = jour pas encore passé · * = corrigé à la main</div>
         <div class="rp-sign">Visa de la direction</div>
       </div>
     </div>
@@ -433,25 +446,42 @@ function renderReport() {
   // employees present all week first (fewest absences on top), absentees at the bottom; alphabetical within the same count
   rows.sort((A, B) => absCount(A.w, A.removed) - absCount(B.w, B.removed) || A.w.full_name.localeCompare(B.w.full_name, 'fr'));
 
-  document.getElementById('reportHead').innerHTML = '<tr><th class="rp-th-name">Employé</th>' +
-    dates.map(x => `<th>${DAY_NAMES[x.d.getDay()]}<small>${pad(x.d.getDate())}/${pad(x.d.getMonth() + 1)}</small></th>`).join('') + '<th>Présent</th><th>Retard</th><th>Absent</th></tr>';
+  // one grid, each day split into two aligned columns: Entrée (arrival) + Sortie (departure)
+  const dayCols = dates.map(() => '<col class="rp-grp"><col>').join('');
+  document.getElementById('reportCols').innerHTML = '<col style="width:9.5em">' + dayCols + '<col style="width:3.3em"><col style="width:3.3em"><col style="width:3.3em">';
+
+  // two-row header: day name spans its Entrée/Sortie pair, then the weekly totals
+  document.getElementById('reportHead').innerHTML =
+    '<tr><th class="rp-th-name" rowspan="2">Employé</th>' +
+    dates.map(x => `<th class="rp-grp" colspan="2">${DAY_NAMES[x.d.getDay()]}<small>${pad(x.d.getDate())}/${pad(x.d.getMonth() + 1)}</small></th>`).join('') +
+    '<th class="rp-grp" rowspan="2">Présent</th><th rowspan="2">Retard</th><th rowspan="2">Absent</th></tr>' +
+    '<tr>' + dates.map(() => '<th class="rp-sub rp-grp">Entrée</th><th class="rp-sub">Sortie</th>').join('') + '</tr>';
+
+  const nameCell = (w, removed) => `<td class="rp-name">${esc(w.full_name)}${removed ? ' <span style="font-weight:400;color:#94a3b8;font-size:.8em">(retiré)</span>' : ''}${w.department ? `<span class="rp-dept">${esc(w.department)}</span>` : ''}</td>`;
+  const past = ds => ds < todayS || (ds === todayS && afternoon);
+  const oc = (wid, ds) => `onclick="openEdit('${wid}','${ds}')" title="Cliquer pour modifier"`;
 
   let tp = 0, tl = 0, ta = 0;
   document.getElementById('reportBody').innerHTML = rows.map(({ w, removed }) => {
     let p = 0, l = 0, a = 0;
     const cells = dates.map(x => {
-      const attr = `class="rp-cell" onclick="openEdit('${w.id}','${x.s}')" title="Cliquer pour modifier"`;
+      const h = oc(w.id, x.s);
       const i = dayInfo(w, x.s);
-      if (i && !i.absent) { p++; if (i.late) l++; return `<td ${attr}><span class="${i.late ? 'rp-late' : 'rp-ok'}">${esc(i.in)}${i.manual ? '*' : ''}</span>${i.out ? `<span class="rp-exit">→ ${esc(i.out)}</span>` : ''}</td>`; }
-      if (i && i.absent) { a++; return `<td ${attr}><span class="rp-abs">Absent*</span></td>`; }
-      const pastDay = x.s < todayS || (x.s === todayS && afternoon);
+      if (i && !i.absent) {                       // present → arrival cell + exit cell
+        p++; if (i.late) l++;
+        const entry = `<span class="${i.late ? 'rp-late' : 'rp-ok'}">${esc(i.in)}${i.manual ? '*' : ''}</span>`;
+        const exit = i.out ? `<span class="rp-out">${esc(i.out)}</span>` : '<span class="rp-none">—</span>';
+        return `<td class="rp-cell rp-grp" ${h}>${entry}</td><td class="rp-cell" ${h}>${exit}</td>`;
+      }
+      if (i && i.absent) { a++; return `<td class="rp-cell rp-grp" colspan="2" ${h}><span class="rp-abs">Absent*</span></td>`; }
       // absent only from the day the employee first appears (a new hire is not absent for earlier days)
-      if (pastDay && !removed && x.s >= (firstSeen[w.id] || todayS)) { a++; return `<td ${attr}><span class="rp-abs">Absent</span></td>`; }
-      return `<td ${attr}><span class="rp-pend">-</span></td>`;
+      if (past(x.s) && !removed && x.s >= (firstSeen[w.id] || todayS)) { a++; return `<td class="rp-cell rp-grp" colspan="2" ${h}><span class="rp-abs">Absent</span></td>`; }
+      return `<td class="rp-cell rp-grp" colspan="2" ${h}><span class="rp-pend">-</span></td>`;
     }).join('');
     tp += p; tl += l; ta += a;
-    return `<tr><td class="rp-name">${esc(w.full_name)}${removed ? ' <span style="font-weight:400;color:#94a3b8;font-size:.8em">(retiré)</span>' : ''}${w.department ? `<span class="rp-dept">${esc(w.department)}</span>` : ''}</td>${cells}<td class="rp-tot rp-ok">${p}</td><td class="rp-tot rp-late">${l}</td><td class="rp-tot rp-abs">${a}</td></tr>`;
-  }).join('') || `<tr><td colspan="${WEEK_DAYS + 4}" style="padding:2em;color:#94a3b8">Aucun employé.</td></tr>`;
+    return `<tr>${nameCell(w, removed)}${cells}<td class="rp-tot rp-ok rp-grp">${p}</td><td class="rp-tot rp-late">${l}</td><td class="rp-tot rp-abs">${a}</td></tr>`;
+  }).join('') || `<tr><td colspan="${WEEK_DAYS * 2 + 4}" style="padding:2em;color:#94a3b8">Aucun employé.</td></tr>`;
+
   document.getElementById('repStaff').textContent = rows.length;
   document.getElementById('repPresent').textContent = tp;
   document.getElementById('repLate').textContent = tl;
