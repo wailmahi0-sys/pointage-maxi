@@ -418,6 +418,21 @@ function renderReport() {
   const rows = activeWorkers().map(w => ({ w, removed: false }));
   workers.filter(w => !w.active).forEach(w => { if (dates.some(x => dayInfo(w, x.s))) rows.push({ w, removed: true }); });   // deleted employees stay in the weeks they worked
 
+  // count absences the same way the cells below do, so we can rank the sheet
+  const absCount = (w, removed) => {
+    let a = 0;
+    dates.forEach(x => {
+      const i = dayInfo(w, x.s);
+      if (i && !i.absent) return;                 // present (machine or manual) → not absent
+      if (i && i.absent) { a++; return; }          // marked absent manually
+      const pastDay = x.s < todayS || (x.s === todayS && afternoon);
+      if (pastDay && !removed && x.s >= (firstSeen[w.id] || todayS)) a++;   // no passage on a past working day
+    });
+    return a;
+  };
+  // employees present all week first (fewest absences on top), absentees at the bottom; alphabetical within the same count
+  rows.sort((A, B) => absCount(A.w, A.removed) - absCount(B.w, B.removed) || A.w.full_name.localeCompare(B.w.full_name, 'fr'));
+
   document.getElementById('reportHead').innerHTML = '<tr><th class="rp-th-name">Employé</th>' +
     dates.map(x => `<th>${DAY_NAMES[x.d.getDay()]}<small>${pad(x.d.getDate())}/${pad(x.d.getMonth() + 1)}</small></th>`).join('') + '<th>Présent</th><th>Retard</th><th>Absent</th></tr>';
 
